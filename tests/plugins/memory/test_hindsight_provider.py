@@ -156,7 +156,7 @@ class TestConfig:
         assert provider._recall_tags is None
         assert provider._bank_mission == ""
         assert provider._bank_retain_mission is None
-        assert provider._retain_context == "conversation between Hermes Agent and the User"
+        assert provider._retain_context == "conversation between Argo Agent and the User"
 
     def test_custom_config_values(self, provider_with_config):
         p = provider_with_config(
@@ -446,7 +446,7 @@ class TestSyncTurn:
         assert call_kwargs["document_id"] == "test-session"
         assert call_kwargs["retain_async"] is True
         assert len(call_kwargs["items"]) == 1
-        assert call_kwargs["items"][0]["context"] == "conversation between Hermes Agent and the User"
+        assert call_kwargs["items"][0]["context"] == "conversation between Argo Agent and the User"
 
     def test_sync_turn_custom_context(self, provider_with_config):
         p = provider_with_config(retain_context="my-agent")

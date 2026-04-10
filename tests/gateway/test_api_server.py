@@ -262,7 +262,7 @@ class TestHealthEndpoint:
             assert resp.status == 200
             data = await resp.json()
             assert data["status"] == "ok"
-            assert data["platform"] == "hermes-agent"
+            assert data["platform"] == "argo-agent"
 
     @pytest.mark.asyncio
     async def test_v1_health_alias_returns_ok(self, adapter):
@@ -273,7 +273,7 @@ class TestHealthEndpoint:
             assert resp.status == 200
             data = await resp.json()
             assert data["status"] == "ok"
-            assert data["platform"] == "hermes-agent"
+            assert data["platform"] == "argo-agent"
 
 
 # ---------------------------------------------------------------------------
@@ -291,7 +291,7 @@ class TestModelsEndpoint:
             data = await resp.json()
             assert data["object"] == "list"
             assert len(data["data"]) == 1
-            assert data["data"][0]["id"] == "hermes-agent"
+            assert data["data"][0]["id"] == "argo-agent"
             assert data["data"][0]["owned_by"] == "hermes"
 
     @pytest.mark.asyncio

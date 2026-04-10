@@ -1,5 +1,19 @@
 # Hermes Agent - Development Guide
 
+> **ARGO FORK**: You are on the **argo fork** of hermes-agent. The `argo` branch
+> rebrands user-facing strings (Hermes → Argo) for messaging bot deployments.
+>
+> - **Workflow & branch model**: see `docs/argo-fork.md`
+> - **Rebrand rules**: see `rebrand.sh` at the repo root
+> - **Branch model**: `main` = pristine `upstream/main` (no local commits).
+>   `argo` = `main` + one commit containing `rebrand.sh` and the rebranded
+>   source/test files. Always deploy from `argo`, never `main`.
+> - **Do NOT rename** env vars (`HERMES_HOME`, `HERMES_TIMEZONE`), module paths
+>   (`hermes_cli/`, `hermes_constants.py`), config paths (`~/.hermes/`), or
+>   anything admin-facing. Only text that **reaches end users on messaging
+>   platforms** gets renamed. See `docs/argo-fork.md` for the full list.
+
+
 Instructions for AI coding assistants and developers working on the hermes-agent codebase.
 
 ## Development Environment

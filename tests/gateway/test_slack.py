@@ -147,7 +147,7 @@ class TestAppMentionHandler:
         assert "app_mention" in registered_events
         assert "assistant_thread_started" in registered_events
         assert "assistant_thread_context_changed" in registered_events
-        assert "/hermes" in registered_commands
+        assert "/argo" in registered_commands
 
 
 # ---------------------------------------------------------------------------

@@ -653,7 +653,7 @@ class TestThreadContext(unittest.TestCase):
             adapter._send_email("newuser@test.com", "Hello!", None)
 
             send_call = mock_server.send_message.call_args[0][0]
-            self.assertEqual(send_call["Subject"], "Re: Hermes Agent")
+            self.assertEqual(send_call["Subject"], "Re: Argo Agent")
 
 
 class TestSendMethods(unittest.TestCase):
