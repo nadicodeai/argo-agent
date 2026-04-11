@@ -19,7 +19,7 @@ image it can drop the patch step entirely and three heavy `RUN` layers
 The current `.github/workflows/docker-publish.yml` targets the upstream repo
 (`NousResearch/hermes-agent`) on Docker Hub, gated behind a fork guard, and
 triggers on `main` — none of which apply to the fork. This plan reworks it to
-publish `ghcr.io/vadimcomanescu/argo-agent` from the `argo` branch, and
+publish `ghcr.io/nadicodeai/argo-agent` from the `argo` branch, and
 retargets the other branch-filtered workflows so CI actually runs on `argo`.
 
 Fleet-side adoption (switching `Dockerfile` `FROM`, compose `image:`, fleet CI
@@ -28,11 +28,11 @@ for this plan and will be a separate PR in `nadicode-agent-fleet`.
 
 ## Goal
 
-On every push to `argo`, publish `ghcr.io/vadimcomanescu/argo-agent:latest` and
-`ghcr.io/vadimcomanescu/argo-agent:<sha>` to GHCR (private package).
+On every push to `argo`, publish `ghcr.io/nadicodeai/argo-agent:latest` and
+`ghcr.io/nadicodeai/argo-agent:<sha>` to GHCR (private package).
 
-On every GitHub release created in `vadimcomanescu/argo-agent`, also publish
-`ghcr.io/vadimcomanescu/argo-agent:<release-tag-name>` — e.g. creating a
+On every GitHub release created in `nadicodeai/argo-agent`, also publish
+`ghcr.io/nadicodeai/argo-agent:<release-tag-name>` — e.g. creating a
 release named `argo-v2026.4.8` publishes `:argo-v2026.4.8`.
 
 **Release naming convention: `argo-v<upstream-version>`.** The prefix is
@@ -64,7 +64,7 @@ same indentation as `runs-on:`, add:
 This is what lets `GITHUB_TOKEN` push to GHCR.
 
 **d) Smoke-test image tag (lines 36, 45).** Replace
-`nousresearch/hermes-agent:test` → `ghcr.io/vadimcomanescu/argo-agent:test`
+`nousresearch/hermes-agent:test` → `ghcr.io/nadicodeai/argo-agent:test`
 (both occurrences). The image is built with `load: true`, so the tag is a
 local docker name only — it is never pushed anywhere. The `/opt/hermes`
 entrypoint path in line 44 stays as-is (internal path is structural, per
@@ -87,11 +87,11 @@ release-triggered runs also authenticate:
 **f) Push-image-on-branch step (lines 54–65).** Two edits in this block:
 - Line 55 `if:` — `refs/heads/main` → `refs/heads/argo`.
 - Lines 62–63 tags — `nousresearch/hermes-agent:latest` →
-  `ghcr.io/vadimcomanescu/argo-agent:latest` and same swap for the `:${{ github.sha }}` tag.
+  `ghcr.io/nadicodeai/argo-agent:latest` and same swap for the `:${{ github.sha }}` tag.
 
 **g) Push-image-on-release step (lines 67–79).** No `if:` edit (still fires on
 `github.event_name == 'release'`, unchanged). Lines 75–77 tags — swap all three
-`nousresearch/hermes-agent:*` → `ghcr.io/vadimcomanescu/argo-agent:*`
+`nousresearch/hermes-agent:*` → `ghcr.io/nadicodeai/argo-agent:*`
 (`:latest`, `:${{ github.event.release.tag_name }}`, `:${{ github.sha }}`).
 
 ### 2. `.github/workflows/tests.yml`
@@ -126,12 +126,12 @@ After the first successful publish, the GHCR package will exist as **private**
 (because `argo-agent` is a private repo). One click makes it pullable by the
 fleet's CI, no secrets or tokens needed:
 
-1. Open https://github.com/users/vadimcomanescu/packages/container/argo-agent/settings
+1. Open https://github.com/orgs/nadicodeai/packages/container/argo-agent/settings
 2. Scroll to **Manage Actions access** → **Add repository** → add
-   `vadimcomanescu/nadicode-agent-fleet` with role **Read**.
+   `nadicodeai/nadicode-agent-fleet` with role **Read**.
 
 That's the entire setup. After this click, when `nadicode-agent-fleet`'s CI
-runs `docker pull ghcr.io/vadimcomanescu/argo-agent:...`, its built-in
+runs `docker pull ghcr.io/nadicodeai/argo-agent:...`, its built-in
 `GITHUB_TOKEN` is already sufficient — no PAT, no repo secret, no extra config.
 
 Keep the package **private**. Making it public is irreversible and the image
@@ -192,8 +192,8 @@ considered done.)
 5. (Optional) Verify the published image actually contains the argo-specific
    changes, not vanilla upstream:
    ```
-   docker pull ghcr.io/vadimcomanescu/argo-agent:argo-v2026.4.8
-   docker run --rm ghcr.io/vadimcomanescu/argo-agent:argo-v2026.4.8 \
+   docker pull ghcr.io/nadicodeai/argo-agent:argo-v2026.4.8
+   docker run --rm ghcr.io/nadicodeai/argo-agent:argo-v2026.4.8 \
      sh -c 'grep -l "honcho" /opt/hermes -r | head -5'
    ```
    Expect: grep hits from the honcho-session-rebind patch. If it returns
