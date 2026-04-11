@@ -2,7 +2,7 @@ name: Nix
 
 on:
   push:
-    branches: [main]
+    branches: [argo]
   pull_request:
     paths:
       - 'flake.nix'
