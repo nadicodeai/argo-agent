@@ -34,7 +34,7 @@ system never gates a force-push.
 
 ```bash
 git checkout main
-git pull upstream main --ff-only       # main stays pristine
+git pull upstream main --ff-only       # update LOCAL main only — never pushed
 git checkout argo
 git merge main                         # regular merge commit
 bash rebrand.sh                        # catches any new "Hermes" strings
@@ -42,6 +42,17 @@ git add -A
 git commit --amend --no-edit           # fold rebrand refresh into merge commit
 git push origin argo                   # plain push, no -f, ever
 ```
+
+**Note: `origin/main` is intentionally stale.** This workflow never pushes
+`main`. Local `main` stays current with upstream for your own reference
+(handy for `git diff main argo` and for sending PRs upstream from a clean
+base), but pushing `main` to origin would trip the global gitleaks hook —
+the `.gitleaks.toml` allowlist lives only on the `argo` branch, so checking
+out `main` drops the config and the 775 upstream false-positive leaks
+return. Since the deploy only reads `argo`, `origin/main` lagging behind
+upstream doesn't affect anything. If you ever need origin/main refreshed
+(e.g., for a PR from GitHub's UI), handle it as a one-off and put the
+allowlist on main for that push.
 
 If the merge hits conflicts, they'll usually be on lines where upstream
 touched code near a rebranded string. Resolve by keeping upstream's
