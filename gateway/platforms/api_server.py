@@ -502,7 +502,7 @@ class APIServerAdapter(BasePlatformAdapter):
 
     async def _handle_health(self, request: "web.Request") -> "web.Response":
         """GET /health — simple health check."""
-        return web.json_response({"status": "ok", "platform": "hermes-agent"})
+        return web.json_response({"status": "ok", "platform": "argo-agent"})
 
     async def _handle_models(self, request: "web.Request") -> "web.Response":
         """GET /v1/models — return hermes-agent as an available model."""
@@ -517,7 +517,7 @@ class APIServerAdapter(BasePlatformAdapter):
                     "id": self._model_name,
                     "object": "model",
                     "created": int(time.time()),
-                    "owned_by": "hermes",
+                    "owned_by": "argo",
                     "permission": [],
                     "root": self._model_name,
                     "parent": None,
