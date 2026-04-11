@@ -218,9 +218,11 @@ class HonchoMemoryProvider(MemoryProvider):
                 return
 
             # Override peer_name with gateway user_id for per-user memory scoping.
-            # CLI sessions won't have user_id, so the config default is preserved.
+            # Only when no explicit peerName was configured — an explicit peerName
+            # means the user chose their identity; a raw user_id (e.g. Telegram
+            # chat ID) should not silently replace it.
             _gw_user_id = kwargs.get("user_id")
-            if _gw_user_id:
+            if _gw_user_id and not cfg.peer_name:
                 cfg.peer_name = _gw_user_id
 
             self._config = cfg
@@ -248,6 +250,12 @@ class HonchoMemoryProvider(MemoryProvider):
 
             # ----- Port #1957: lazy session init for tools-only mode -----
             if self._recall_mode == "tools":
+                if cfg.init_on_session_start:
+                    # Eager init: create session now so sync_turn() works from turn 1.
+                    # Does NOT enable auto-injection — prefetch() still returns empty.
+                    logger.debug("Honcho tools-only mode — eager session init (initOnSessionStart=true)")
+                    self._do_session_init(cfg, session_id, **kwargs)
+                    return
                 # Defer actual session creation until first tool call
                 self._lazy_init_kwargs = kwargs
                 self._lazy_init_session_id = session_id
@@ -308,6 +316,52 @@ class HonchoMemoryProvider(MemoryProvider):
                 logger.debug("Honcho pre-warm threads started for session: %s", self._session_key)
             except Exception as e:
                 logger.debug("Honcho pre-warm failed: %s", e)
+
+    def _rebind_session_if_changed(self, session_id: str) -> None:
+        """Update _session_key when the active session changes between turns.
+
+        Fixes NousResearch/hermes-agent#5947 Bug A: _session_key was resolved
+        once at startup and never updated, causing all turns after the first to
+        write into the wrong Honcho session when the platform rotates session IDs.
+        """
+        if not session_id:
+            return
+        if self._config is None or self._manager is None:
+            return
+
+        try:
+            new_key = (
+                self._config.resolve_session_name(session_title=None, session_id=session_id)
+                or session_id
+            )
+        except Exception as e:
+            logger.debug("Honcho _rebind_session_if_changed: resolve failed: %s", e)
+            new_key = session_id
+
+        if new_key == self._session_key:
+            return
+
+        logger.debug(
+            "Honcho session rebind: %r -> %r (session_id=%r)",
+            self._session_key,
+            new_key,
+            session_id,
+        )
+
+        try:
+            self._manager.get_or_create(new_key)
+        except Exception as e:
+            # Continue: update _session_key even on failure so subsequent writes
+            # fail rather than go to the wrong user's session (isolation > completeness).
+            logger.debug("Honcho _rebind_session_if_changed: get_or_create failed: %s", e)
+
+        with self._prefetch_lock:
+            self._prefetch_result = ""
+
+        with self._first_turn_lock:
+            self._first_turn_context = None
+
+        self._session_key = new_key
 
     def _ensure_session(self) -> bool:
         """Lazily initialize the Honcho session (for tools-only mode).
@@ -430,6 +484,8 @@ class HonchoMemoryProvider(MemoryProvider):
         """
         if self._cron_skipped:
             return ""
+
+        self._rebind_session_if_changed(session_id)
 
         # B1: tools-only mode — no auto-injection
         if self._recall_mode == "tools":
@@ -570,14 +626,19 @@ class HonchoMemoryProvider(MemoryProvider):
         """
         if self._cron_skipped:
             return
+
+        self._rebind_session_if_changed(session_id)
+
         if not self._manager or not self._session_key:
             return
 
         msg_limit = self._config.message_max_chars if self._config else 25000
 
+        _key = self._session_key  # capture by value — avoid closure over mutable attr
+
         def _sync():
             try:
-                session = self._manager.get_or_create(self._session_key)
+                session = self._manager.get_or_create(_key)
                 for chunk in self._chunk_message(user_content, msg_limit):
                     session.add_message("user", chunk)
                 for chunk in self._chunk_message(assistant_content, msg_limit):
