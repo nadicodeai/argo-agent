@@ -40,7 +40,7 @@ import shutil
 import tempfile
 from pathlib import Path
 from hermes_constants import get_hermes_home
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -240,20 +240,6 @@ def _validate_file_path(file_path: str) -> Optional[str]:
     return None
 
 
-def _resolve_skill_target(skill_dir: Path, file_path: str) -> Tuple[Optional[Path], Optional[str]]:
-    """Resolve a supporting-file path and ensure it stays within the skill directory."""
-    target = skill_dir / file_path
-    try:
-        resolved = target.resolve(strict=False)
-        skill_dir_resolved = skill_dir.resolve()
-        resolved.relative_to(skill_dir_resolved)
-    except ValueError:
-        return None, "Path escapes skill directory boundary."
-    except OSError as e:
-        return None, f"Invalid file path '{file_path}': {e}"
-    return target, None
-
-
 def _atomic_write_text(file_path: Path, content: str, encoding: str = "utf-8") -> None:
     """
     Atomically write text content to a file.
@@ -408,9 +394,7 @@ def _patch_skill(
         err = _validate_file_path(file_path)
         if err:
             return {"success": False, "error": err}
-        target, err = _resolve_skill_target(skill_dir, file_path)
-        if err:
-            return {"success": False, "error": err}
+        target = skill_dir / file_path
     else:
         # Patching SKILL.md
         target = skill_dir / "SKILL.md"
@@ -426,7 +410,7 @@ def _patch_skill(
     # from exact-match failures on minor formatting mismatches.
     from tools.fuzzy_match import fuzzy_find_and_replace
 
-    new_content, match_count, _strategy, match_error = fuzzy_find_and_replace(
+    new_content, match_count, match_error = fuzzy_find_and_replace(
         content, old_string, new_string, replace_all
     )
     if match_error:
@@ -516,9 +500,7 @@ def _write_file(name: str, file_path: str, file_content: str) -> Dict[str, Any]:
     if not existing:
         return {"success": False, "error": f"Skill '{name}' not found. Create it first with action='create'."}
 
-    target, err = _resolve_skill_target(existing["path"], file_path)
-    if err:
-        return {"success": False, "error": err}
+    target = existing["path"] / file_path
     target.parent.mkdir(parents=True, exist_ok=True)
     # Back up for rollback
     original_content = target.read_text(encoding="utf-8") if target.exists() else None
@@ -551,9 +533,7 @@ def _remove_file(name: str, file_path: str) -> Dict[str, Any]:
         return {"success": False, "error": f"Skill '{name}' not found."}
     skill_dir = existing["path"]
 
-    target, err = _resolve_skill_target(skill_dir, file_path)
-    if err:
-        return {"success": False, "error": err}
+    target = skill_dir / file_path
     if not target.exists():
         # List what's actually there for the model to see
         available = []

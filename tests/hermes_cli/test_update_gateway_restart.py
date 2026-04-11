@@ -368,8 +368,6 @@ class TestCmdUpdateLaunchdRestart:
         monkeypatch.setattr(
             gateway_cli, "is_macos", lambda: False,
         )
-        monkeypatch.setattr(gateway_cli, "supports_systemd_services", lambda: True)
-        monkeypatch.setattr(gateway_cli, "is_termux", lambda: False)
 
         mock_run.side_effect = _make_run_side_effect(
             commit_count="3",
@@ -428,8 +426,7 @@ class TestCmdUpdateSystemService:
     ):
         """When user systemd is inactive but a system service exists, restart via system scope."""
         monkeypatch.setattr(gateway_cli, "is_macos", lambda: False)
-        monkeypatch.setattr(gateway_cli, "supports_systemd_services", lambda: True)
-        monkeypatch.setattr(gateway_cli, "is_termux", lambda: False)
+        monkeypatch.setattr(gateway_cli, "is_linux", lambda: True)
 
         mock_run.side_effect = _make_run_side_effect(
             commit_count="3",
@@ -458,8 +455,7 @@ class TestCmdUpdateSystemService:
     ):
         """When system service restart fails, show the failure message."""
         monkeypatch.setattr(gateway_cli, "is_macos", lambda: False)
-        monkeypatch.setattr(gateway_cli, "supports_systemd_services", lambda: True)
-        monkeypatch.setattr(gateway_cli, "is_termux", lambda: False)
+        monkeypatch.setattr(gateway_cli, "is_linux", lambda: True)
 
         mock_run.side_effect = _make_run_side_effect(
             commit_count="3",
@@ -481,8 +477,7 @@ class TestCmdUpdateSystemService:
     ):
         """When both user and system services are active, both are restarted."""
         monkeypatch.setattr(gateway_cli, "is_macos", lambda: False)
-        monkeypatch.setattr(gateway_cli, "supports_systemd_services", lambda: True)
-        monkeypatch.setattr(gateway_cli, "is_termux", lambda: False)
+        monkeypatch.setattr(gateway_cli, "is_linux", lambda: True)
 
         mock_run.side_effect = _make_run_side_effect(
             commit_count="3",
@@ -565,8 +560,7 @@ class TestServicePidExclusion:
     ):
         """After systemd restart, the sweep must exclude the service PID."""
         monkeypatch.setattr(gateway_cli, "is_macos", lambda: False)
-        monkeypatch.setattr(gateway_cli, "supports_systemd_services", lambda: True)
-        monkeypatch.setattr(gateway_cli, "is_termux", lambda: False)
+        monkeypatch.setattr(gateway_cli, "is_linux", lambda: True)
 
         SERVICE_PID = 55000
 
@@ -645,8 +639,7 @@ class TestGetServicePids:
     """Unit tests for _get_service_pids()."""
 
     def test_returns_systemd_main_pid(self, monkeypatch):
-        monkeypatch.setattr(gateway_cli, "supports_systemd_services", lambda: True)
-        monkeypatch.setattr(gateway_cli, "is_termux", lambda: False)
+        monkeypatch.setattr(gateway_cli, "is_linux", lambda: True)
         monkeypatch.setattr(gateway_cli, "is_macos", lambda: False)
 
         def fake_run(cmd, **kwargs):
@@ -695,8 +688,7 @@ class TestGetServicePids:
 
     def test_excludes_zero_pid(self, monkeypatch):
         """systemd returns MainPID=0 for stopped services; skip those."""
-        monkeypatch.setattr(gateway_cli, "supports_systemd_services", lambda: True)
-        monkeypatch.setattr(gateway_cli, "is_termux", lambda: False)
+        monkeypatch.setattr(gateway_cli, "is_linux", lambda: True)
         monkeypatch.setattr(gateway_cli, "is_macos", lambda: False)
 
         def fake_run(cmd, **kwargs):

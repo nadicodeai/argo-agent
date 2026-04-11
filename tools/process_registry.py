@@ -172,19 +172,6 @@ class ProcessRegistry:
 
     # ----- Spawn -----
 
-    @staticmethod
-    def _env_temp_dir(env: Any) -> str:
-        """Return the writable sandbox temp dir for env-backed background tasks."""
-        get_temp_dir = getattr(env, "get_temp_dir", None)
-        if callable(get_temp_dir):
-            try:
-                temp_dir = get_temp_dir()
-                if isinstance(temp_dir, str) and temp_dir.startswith("/"):
-                    return temp_dir.rstrip("/") or "/"
-            except Exception as exc:
-                logger.debug("Could not resolve environment temp dir: %s", exc)
-        return "/tmp"
-
     def spawn_local(
         self,
         command: str,
@@ -329,20 +316,12 @@ class ProcessRegistry:
         )
 
         # Run the command in the sandbox with output capture
-        temp_dir = self._env_temp_dir(env)
-        log_path = f"{temp_dir}/hermes_bg_{session.id}.log"
-        pid_path = f"{temp_dir}/hermes_bg_{session.id}.pid"
-        exit_path = f"{temp_dir}/hermes_bg_{session.id}.exit"
+        log_path = f"/tmp/hermes_bg_{session.id}.log"
+        pid_path = f"/tmp/hermes_bg_{session.id}.pid"
         quoted_command = shlex.quote(command)
-        quoted_temp_dir = shlex.quote(temp_dir)
-        quoted_log_path = shlex.quote(log_path)
-        quoted_pid_path = shlex.quote(pid_path)
-        quoted_exit_path = shlex.quote(exit_path)
         bg_command = (
-            f"mkdir -p {quoted_temp_dir} && "
-            f"( nohup bash -lc {quoted_command} > {quoted_log_path} 2>&1; "
-            f"rc=$?; printf '%s\\n' \"$rc\" > {quoted_exit_path} ) & "
-            f"echo $! > {quoted_pid_path} && cat {quoted_pid_path}"
+            f"nohup bash -c {quoted_command} > {log_path} 2>&1 & "
+            f"echo $! > {pid_path} && cat {pid_path}"
         )
 
         try:
@@ -363,7 +342,7 @@ class ProcessRegistry:
             # Start a poller thread that periodically reads the log file
             reader = threading.Thread(
                 target=self._env_poller_loop,
-                args=(session, env, log_path, pid_path, exit_path),
+                args=(session, env, log_path, pid_path),
                 daemon=True,
                 name=f"proc-poller-{session.id}",
             )
@@ -396,28 +375,25 @@ class ProcessRegistry:
                         session.output_buffer = session.output_buffer[-session.max_output_chars:]
         except Exception as e:
             logger.debug("Process stdout reader ended: %s", e)
-        finally:
-            # Always reap the child to prevent zombie processes.
-            try:
-                session.process.wait(timeout=5)
-            except Exception as e:
-                logger.debug("Process wait timed out or failed: %s", e)
-            session.exited = True
-            session.exit_code = session.process.returncode
-            self._move_to_finished(session)
+
+        # Process exited
+        try:
+            session.process.wait(timeout=5)
+        except Exception as e:
+            logger.debug("Process wait timed out or failed: %s", e)
+        session.exited = True
+        session.exit_code = session.process.returncode
+        self._move_to_finished(session)
 
     def _env_poller_loop(
-        self, session: ProcessSession, env: Any, log_path: str, pid_path: str, exit_path: str
+        self, session: ProcessSession, env: Any, log_path: str, pid_path: str
     ):
         """Background thread: poll a sandbox log file for non-local backends."""
-        quoted_log_path = shlex.quote(log_path)
-        quoted_pid_path = shlex.quote(pid_path)
-        quoted_exit_path = shlex.quote(exit_path)
         while not session.exited:
             time.sleep(2)  # Poll every 2 seconds
             try:
                 # Read new output from the log file
-                result = env.execute(f"cat {quoted_log_path} 2>/dev/null", timeout=10)
+                result = env.execute(f"cat {log_path} 2>/dev/null", timeout=10)
                 new_output = result.get("output", "")
                 if new_output:
                     with session._lock:
@@ -427,14 +403,14 @@ class ProcessRegistry:
 
                 # Check if process is still running
                 check = env.execute(
-                    f"kill -0 \"$(cat {quoted_pid_path} 2>/dev/null)\" 2>/dev/null; echo $?",
+                    f"kill -0 $(cat {pid_path} 2>/dev/null) 2>/dev/null; echo $?",
                     timeout=5,
                 )
                 check_output = check.get("output", "").strip()
                 if check_output and check_output.splitlines()[-1].strip() != "0":
-                    # Process has exited -- get exit code captured by the wrapper shell.
+                    # Process has exited -- get exit code
                     exit_result = env.execute(
-                        f"cat {quoted_exit_path} 2>/dev/null",
+                        f"wait $(cat {pid_path} 2>/dev/null) 2>/dev/null; echo $?",
                         timeout=5,
                     )
                     exit_str = exit_result.get("output", "").strip()
@@ -484,21 +460,15 @@ class ProcessRegistry:
         self._move_to_finished(session)
 
     def _move_to_finished(self, session: ProcessSession):
-        """Move a session from running to finished.
-
-        Idempotent: if the session was already moved (e.g. kill_process raced
-        with the reader thread), the second call is a no-op — no duplicate
-        completion notification is enqueued.
-        """
+        """Move a session from running to finished."""
         with self._lock:
-            was_running = self._running.pop(session.id, None) is not None
+            self._running.pop(session.id, None)
             self._finished[session.id] = session
         self._write_checkpoint()
 
-        # Only enqueue completion notification on the FIRST move.  Without
-        # this guard, kill_process() and the reader thread can both call
-        # _move_to_finished(), producing duplicate [SYSTEM: ...] messages.
-        if was_running and session.notify_on_complete:
+        # If the caller requested agent notification, enqueue the completion
+        # so the CLI/gateway can auto-trigger a new agent turn.
+        if session.notify_on_complete:
             from tools.ansi_strip import strip_ansi
             output_tail = strip_ansi(session.output_buffer[-2000:]) if session.output_buffer else ""
             self.completion_queue.put({
@@ -585,10 +555,7 @@ class ProcessRegistry:
         from tools.ansi_strip import strip_ansi
         from tools.terminal_tool import _interrupt_event
 
-        try:
-            default_timeout = int(os.getenv("TERMINAL_TIMEOUT", "180"))
-        except (ValueError, TypeError):
-            default_timeout = 180
+        default_timeout = int(os.getenv("TERMINAL_TIMEOUT", "180"))
         max_timeout = default_timeout
         requested_timeout = timeout
         timeout_note = None
@@ -732,29 +699,6 @@ class ProcessRegistry:
     def submit_stdin(self, session_id: str, data: str = "") -> dict:
         """Send data + newline to a running process's stdin (like pressing Enter)."""
         return self.write_stdin(session_id, data + "\n")
-
-    def close_stdin(self, session_id: str) -> dict:
-        """Close a running process's stdin / send EOF without killing the process."""
-        session = self.get(session_id)
-        if session is None:
-            return {"status": "not_found", "error": f"No process with ID {session_id}"}
-        if session.exited:
-            return {"status": "already_exited", "error": "Process has already finished"}
-
-        if hasattr(session, '_pty') and session._pty:
-            try:
-                session._pty.sendeof()
-                return {"status": "ok", "message": "EOF sent"}
-            except Exception as e:
-                return {"status": "error", "error": str(e)}
-
-        if not session.process or not session.process.stdin:
-            return {"status": "error", "error": "Process stdin not available (non-local backend or stdin closed)"}
-        try:
-            session.process.stdin.close()
-            return {"status": "ok", "message": "stdin closed"}
-        except Exception as e:
-            return {"status": "error", "error": str(e)}
 
     def list_sessions(self, task_id: str = None) -> list:
         """List all running and recently-finished processes."""
@@ -971,14 +915,14 @@ PROCESS_SCHEMA = {
         "Actions: 'list' (show all), 'poll' (check status + new output), "
         "'log' (full output with pagination), 'wait' (block until done or timeout), "
         "'kill' (terminate), 'write' (send raw stdin data without newline), "
-        "'submit' (send data + Enter, for answering prompts), 'close' (close stdin/send EOF)."
+        "'submit' (send data + Enter, for answering prompts)."
     ),
     "parameters": {
         "type": "object",
         "properties": {
             "action": {
                 "type": "string",
-                "enum": ["list", "poll", "log", "wait", "kill", "write", "submit", "close"],
+                "enum": ["list", "poll", "log", "wait", "kill", "write", "submit"],
                 "description": "Action to perform on background processes"
             },
             "session_id": {
@@ -1018,7 +962,7 @@ def _handle_process(args, **kw):
 
     if action == "list":
         return _json.dumps({"processes": process_registry.list_sessions(task_id=task_id)}, ensure_ascii=False)
-    elif action in ("poll", "log", "wait", "kill", "write", "submit", "close"):
+    elif action in ("poll", "log", "wait", "kill", "write", "submit"):
         if not session_id:
             return tool_error(f"session_id is required for {action}")
         if action == "poll":
@@ -1034,9 +978,7 @@ def _handle_process(args, **kw):
             return _json.dumps(process_registry.write_stdin(session_id, str(args.get("data", ""))), ensure_ascii=False)
         elif action == "submit":
             return _json.dumps(process_registry.submit_stdin(session_id, str(args.get("data", ""))), ensure_ascii=False)
-        elif action == "close":
-            return _json.dumps(process_registry.close_stdin(session_id), ensure_ascii=False)
-    return tool_error(f"Unknown process action: {action}. Use: list, poll, log, wait, kill, write, submit, close")
+    return tool_error(f"Unknown process action: {action}. Use: list, poll, log, wait, kill, write, submit")
 
 
 registry.register(

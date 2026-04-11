@@ -4,6 +4,12 @@ This is the `argo` branch of a fork of NousResearch/hermes-agent. It exists
 to deploy messaging bots (Telegram, WhatsApp, Discord, Slack, etc.) under the
 "Argo" brand instead of "Hermes".
 
+Argo is a **stable deploy branch**: it tracks upstream **release tags**, not
+`upstream/main`. Main is the upstream dev branch where new code lands hourly
+and is not curated for release. Releases are cut as tags (`v2026.4.8`,
+`v2026.4.3`, …, CalVer `vYYYY.M.D` + semver `v0.x.0` naming) every 3-7 days.
+Argo merges each new release tag on a daily scheduled sync.
+
 Only text that **reaches end users on messaging platforms** is rebranded.
 The CLI, setup wizard, env vars, module names, config paths, docs, etc. are
 all unchanged because only operators see them. This keeps merges from
@@ -11,85 +17,85 @@ upstream lightweight.
 
 ## Branch model
 
-- **`main`** — pristine mirror of `upstream/main`. Only fast-forward pulls
-  from upstream; no local commits ever.
-- **`argo`** — deployment branch. Contains the fork modifications on top
-  of whatever upstream merged-in last:
-  - The honcho session-rebind fix for NousResearch/hermes-agent#5947 Bug A
-    (per-turn `_session_key` refresh in `HonchoMemoryProvider`, touches
-    `plugins/memory/honcho/__init__.py` and `run_agent.py`). Should go
-    upstream eventually; once merged, drop it.
-  - The rebrand of user-facing strings via `rebrand.sh`.
+- **`argo`** — deployment branch. Built from the latest upstream release tag
+  plus two layers of local modifications:
+  1. **Honcho session-rebind fix** for NousResearch/hermes-agent#5947 Bug A
+     (per-turn `_session_key` refresh in `HonchoMemoryProvider`, touches
+     `plugins/memory/honcho/__init__.py` and `run_agent.py`). Applied as a
+     `git apply` of `nadicode-agent-fleet/patches/hermes-agent/0001-rebind-session-per-turn.patch`.
+     Should go upstream eventually; once merged, drop it.
+  2. **Rebrand** of user-facing strings via `rebrand.sh`. Idempotent,
+     tolerant of missing files (see the script), so the same rules work
+     across different upstream release tags without editing.
+- **`main`** — not used by this fork. Upstream's dev branch moves too fast
+  to track safely (hundreds of commits per week). If you need to see what's
+  brewing upstream, use `git fetch upstream && git log upstream/main`.
+  There is no local `main` branch maintained in this fork's workflow.
 
-**Always deploy from `argo`, never from `main`.** `main` is raw upstream
-code, still says "Hermes" everywhere, and is missing the honcho rebind fix.
+**Always deploy from `argo`, never from anything else.**
 
-## Sync workflow (merge-based, no force-push)
+## Sync workflow (release-tag tracking, merge-based, no force-push)
 
-This fork uses a **merge-based** sync, not rebase. Every upstream sync
-produces a regular merge commit on `argo`, and pushes are plain `git push`
-with no `-f`. The branch history grows over time but never gets rewritten,
-so `origin/argo` is always an ancestor of local `argo` and the permission
-system never gates a force-push.
+The daily scheduled agent (and you, when syncing by hand) follow the same
+recipe: fetch upstream tags, find the latest release tag, if it isn't
+already in argo's ancestry merge it in, re-run rebrand, push.
 
 ```bash
-git checkout main
-git pull upstream main --ff-only       # update LOCAL main only — never pushed
+git fetch upstream --tags
+LATEST_TAG=$(git tag -l 'v2*.*.*' --sort=-v:refname | head -1)
 git checkout argo
-git merge main                         # regular merge commit
+git pull origin argo --ff-only
+
+if git merge-base --is-ancestor "$LATEST_TAG" argo; then
+    echo "argo already contains $LATEST_TAG — nothing to sync"
+    exit 0
+fi
+
+git merge "$LATEST_TAG" --no-edit      # regular merge commit
 bash rebrand.sh                        # catches any new "Hermes" strings
 git add -A
 git commit --amend --no-edit           # fold rebrand refresh into merge commit
 git push origin argo                   # plain push, no -f, ever
 ```
 
-**Note: `origin/main` is intentionally stale.** This workflow never pushes
-`main`. Local `main` stays current with upstream for your own reference
-(handy for `git diff main argo` and for sending PRs upstream from a clean
-base), but pushing `main` to origin would trip the global gitleaks hook —
-the `.gitleaks.toml` allowlist lives only on the `argo` branch, so checking
-out `main` drops the config and the 775 upstream false-positive leaks
-return. Since the deploy only reads `argo`, `origin/main` lagging behind
-upstream doesn't affect anything. If you ever need origin/main refreshed
-(e.g., for a PR from GitHub's UI), handle it as a one-off and put the
-allowlist on main for that push.
-
 If the merge hits conflicts, they'll usually be on lines where upstream
 touched code near a rebranded string. Resolve by keeping upstream's
 structural change and letting `rebrand.sh` re-apply the sed patterns in
-the next step.
+the next step. If `rebrand.sh` itself fails, it's because a rebrand rule's
+target file was renamed or restructured upstream — update the rule and
+re-run.
+
+### Why release tags and not main
+
+Tracking `upstream/main` means every sync pulls in whatever landed in the
+last 24h — half-finished features, pre-fix bugs, refactor dust. For a stable
+deploy branch serving real users on messaging platforms, that's an
+unacceptable risk surface. Tracking release tags gives you upstream's own
+curated snapshots at the cost of at most ~7 days of lag on new features.
 
 ### Why merge and not rebase
 
-Rebase gives a cleaner linear history (always "main + honcho + rebrand"),
-but requires `git push -f` on every sync, which is blocked by default by
-most permission systems and agent sandboxes for a reason: force-push
-destroys the remote's record of what was there. For a solo deploy branch
-it's technically safe, but "technically safe" and "safety system wants to
-block it by default" is a smell.
+Rebase would require `git push -f` on every sync. Most permission systems
+and agent sandboxes block force-push by default for a reason: it destroys
+the remote's record of what was there. Merge-based keeps `origin/argo` as
+an ancestor of every new tip, so plain `git push` always works. The cost
+is a longer commit history (one merge commit per sync), which nobody reads
+anyway — argo is a deploy branch, not an authored project.
 
-Merge-based trades a longer commit history (one merge commit + rebrand
-refresh per sync) for zero force-pushes. Nobody reads `argo`'s commit
-history anyway — it's a deploy branch, not an authored project. The
-meaningful diff (`git diff main argo`) stays exactly the same either way:
-honcho fix + current rebrand output.
+## When the honcho fix (or any other local patch) lands upstream
 
-## When a patch goes upstream
+Check after each release sync: the scheduled agent reports any upstream
+commits touching `plugins/memory/honcho/` or `run_agent.py` — that's the
+early-warning signal. When a release tag ships that contains the upstreamed
+fix, drop the local patch:
 
-When the honcho fix (or any other local patch) is accepted upstream, drop
-it from argo. Simplest way:
-
-```bash
-git checkout main
-git pull upstream main --ff-only       # now includes the upstreamed fix
-git checkout argo
-git merge main                         # merge normally; upstream commit replaces local one
-# If the merge conflicts on honcho files (upstream's version vs ours),
-# take upstream's version since it's now the authoritative fix:
-#   git checkout --theirs plugins/memory/honcho/__init__.py run_agent.py
-bash rebrand.sh && git add -A && git commit --amend --no-edit
-git push origin argo
-```
+1. Remove the `git apply` step from the next argo rebuild (see `rebrand.sh`
+   and the scheduled trigger prompt).
+2. The next sync's merge will bring in upstream's version of the file; the
+   local patched version gets superseded. No action needed beyond the normal
+   merge.
+3. If the merge conflicts on honcho files, prefer upstream's version:
+   `git checkout --theirs plugins/memory/honcho/__init__.py run_agent.py`
 
 ## What gets rebranded
 

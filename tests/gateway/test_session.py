@@ -90,10 +90,7 @@ class TestSessionSourceRoundtrip:
 
 class TestSessionSourceDescription:
     def test_local_cli(self):
-        source = SessionSource(
-            platform=Platform.LOCAL, chat_id="cli",
-            chat_name="CLI terminal", chat_type="dm",
-        )
+        source = SessionSource.local_cli()
         assert source.description == "CLI terminal"
 
     def test_dm_with_username(self):
@@ -146,10 +143,7 @@ class TestSessionSourceDescription:
 
 class TestLocalCliFactory:
     def test_local_cli_defaults(self):
-        source = SessionSource(
-            platform=Platform.LOCAL, chat_id="cli",
-            chat_name="CLI terminal", chat_type="dm",
-        )
+        source = SessionSource.local_cli()
         assert source.platform == Platform.LOCAL
         assert source.chat_id == "cli"
         assert source.chat_type == "dm"
@@ -273,10 +267,7 @@ class TestBuildSessionContextPrompt:
 
     def test_local_prompt_mentions_machine(self):
         config = GatewayConfig()
-        source = SessionSource(
-            platform=Platform.LOCAL, chat_id="cli",
-            chat_name="CLI terminal", chat_type="dm",
-        )
+        source = SessionSource.local_cli()
         ctx = build_session_context(source, config)
         prompt = build_session_context_prompt(ctx)
 

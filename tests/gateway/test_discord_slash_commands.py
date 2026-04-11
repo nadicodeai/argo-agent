@@ -62,7 +62,6 @@ def adapter():
         fetch_channel=AsyncMock(),
         user=SimpleNamespace(id=99999, name="HermesBot"),
     )
-    adapter._text_batch_delay_seconds = 0  # disable batching for tests
     return adapter
 
 

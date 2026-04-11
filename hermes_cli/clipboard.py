@@ -19,9 +19,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-from hermes_constants import is_wsl as _is_wsl
-
 logger = logging.getLogger(__name__)
+
+# Cache WSL detection (checked once per process)
+_wsl_detected: bool | None = None
 
 
 def save_clipboard_image(dest: Path) -> bool:
@@ -215,6 +216,19 @@ def _windows_save(dest: Path) -> bool:
 
 
 # ── Linux ────────────────────────────────────────────────────────────────
+
+def _is_wsl() -> bool:
+    """Detect if running inside WSL (1 or 2)."""
+    global _wsl_detected
+    if _wsl_detected is not None:
+        return _wsl_detected
+    try:
+        with open("/proc/version", "r") as f:
+            _wsl_detected = "microsoft" in f.read().lower()
+    except Exception:
+        _wsl_detected = False
+    return _wsl_detected
+
 
 def _linux_save(dest: Path) -> bool:
     """Try clipboard backends in priority order: WSL → Wayland → X11."""

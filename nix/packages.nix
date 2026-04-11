@@ -14,7 +14,7 @@
       };
 
       runtimeDeps = with pkgs; [
-        nodejs_20 ripgrep git openssh ffmpeg tirith
+        nodejs_20 ripgrep git openssh ffmpeg
       ];
 
       runtimePath = pkgs.lib.makeBinPath runtimeDeps;
