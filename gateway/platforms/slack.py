@@ -182,7 +182,7 @@ class SlackAdapter(BasePlatformAdapter):
                 pass
 
             # Register slash command handler
-            @self._app.command("/hermes")
+            @self._app.command("/argo")
             async def handle_hermes_command(ack, command):
                 await ack()
                 await self._handle_slash_command(command)

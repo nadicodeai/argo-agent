@@ -1,0 +1,35 @@
+# Gitleaks allowlist for the argo fork.
+#
+# All 775 hits gitleaks produces against this repo are in upstream files that
+# are already public on NousResearch/hermes-agent: LLM documentation corpora
+# with example tokens, test fixtures with fake credentials, docs with example
+# API keys, and variable names like `access_token` / `refresh_token` that trip
+# the generic-api-key rule. None of these are secrets we authored.
+#
+# The allowlist is by path, scoped to upstream directories where false
+# positives cluster. Anything we add ourselves (outside tests/ and docs/)
+# still gets scanned by the default rules.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Upstream test fixtures, docs, and example corpora with fake tokens"
+paths = [
+  '''tests/''',
+  '''website/docs/''',
+  '''docs/''',
+  '''evals/''',
+  '''skills/mlops/unsloth/references/''',
+  '''skills/gifs/gif-search/''',
+  '''skills/productivity/phone-calls/''',
+  '''optional-skills/productivity/telephony/''',
+  '''agent/anthropic_adapter\.py$''',
+  '''agent/redact\.py$''',
+  '''hermes_cli/auth\.py$''',
+  '''hermes_cli/copilot_auth\.py$''',
+  '''mixture_of_agents_tool\.py$''',
+  '''(^|/)README\.md$''',
+  '''(^|/)AGENTS\.md$''',
+  '''exprted\.jsonl$''',
+]
