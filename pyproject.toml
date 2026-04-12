@@ -73,27 +73,15 @@ rl = [
 ]
 yc-bench = ["yc-bench @ git+https://github.com/collinear-ai/yc-bench.git ; python_version >= '3.12'"]
 all = [
-  "hermes-agent[modal]",
-  "hermes-agent[daytona]",
   "hermes-agent[messaging]",
-  # matrix excluded: python-olm (required by matrix-nio[e2e]) is upstream-broken
-  # on modern macOS (archived libolm, C++ errors with Clang 21+). Including it
-  # here causes the entire [all] install to fail, dropping all other extras.
-  # Users who need Matrix can install manually: pip install 'hermes-agent[matrix]'
   "hermes-agent[cron]",
-  "hermes-agent[cli]",
-  "hermes-agent[dev]",
   "hermes-agent[tts-premium]",
-  "hermes-agent[slack]",
   "hermes-agent[pty]",
   "hermes-agent[honcho]",
   "hermes-agent[mcp]",
   "hermes-agent[homeassistant]",
-  "hermes-agent[sms]",
   "hermes-agent[acp]",
   "hermes-agent[voice]",
-  "hermes-agent[dingtalk]",
-  "hermes-agent[feishu]",
 ]
 
 [project.scripts]
