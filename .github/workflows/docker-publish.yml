@@ -20,6 +20,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
+      - name: Free disk space
+        # GHA runners have ~14GB free by default. Upstream's image is ~2.5GB
+        # (uv venv + playwright chrome + node deps), and `load: true` for the
+        # smoke test below exports it to the local docker daemon, which needs
+        # ~2x the image size. Without this step, the export fails with "no
+        # space left on device" late in the build.
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+                      /opt/hostedtoolcache /usr/local/share/boost
+          sudo docker image prune -af || true
+          df -h /
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
