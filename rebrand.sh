@@ -128,8 +128,10 @@ sed_files -e 's/conversation between Hermes Agent and the User/conversation betw
     plugins/memory/hindsight/__init__.py
 
 # Telegram BotCommands menu (visible to every user via setMyCommands autocomplete)
-sed_files -e 's/"Update Hermes Agent to the latest version"/"Update Argo Agent to the latest version"/' -- \
-    hermes_cli/commands.py
+sed_files \
+    -e 's/"Update Hermes Agent to the latest version"/"Update Argo Agent to the latest version"/' \
+    -e 's/"Create or restore state snapshots of Hermes config\/state"/"Create or restore state snapshots of Argo config\/state"/' \
+    -- hermes_cli/commands.py
 
 # Gateway command-handler replies sent to users via adapter.send()
 # All commands are reachable by any allowlisted user — no per-command gating.

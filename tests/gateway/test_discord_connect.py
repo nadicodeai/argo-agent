@@ -56,7 +56,7 @@ class FakeTree:
 
 
 class FakeBot:
-    def __init__(self, *, intents):
+    def __init__(self, *, intents, proxy=None):
         self.intents = intents
         self.user = SimpleNamespace(id=999, name="Hermes")
         self._events = {}
@@ -115,7 +115,7 @@ async def test_connect_only_requests_members_intent_when_needed(monkeypatch, all
 
     created = {}
 
-    def fake_bot_factory(*, command_prefix, intents):
+    def fake_bot_factory(*, command_prefix, intents, proxy=None):
         created["bot"] = FakeBot(intents=intents)
         return created["bot"]
 
@@ -144,7 +144,7 @@ async def test_connect_releases_token_lock_on_timeout(monkeypatch):
     monkeypatch.setattr(
         discord_platform.commands,
         "Bot",
-        lambda **kwargs: FakeBot(intents=kwargs["intents"]),
+        lambda **kwargs: FakeBot(intents=kwargs["intents"], proxy=kwargs.get("proxy")),
     )
 
     async def fake_wait_for(awaitable, timeout):

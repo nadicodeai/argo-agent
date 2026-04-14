@@ -20,6 +20,7 @@ Configuration in config.yaml:
 import asyncio
 import logging
 import os
+import re
 import time
 import uuid
 from datetime import datetime, timezone
@@ -53,6 +54,8 @@ logger = logging.getLogger(__name__)
 
 MAX_MESSAGE_LENGTH = 20000
 RECONNECT_BACKOFF = [2, 5, 10, 30, 60]
+_SESSION_WEBHOOKS_MAX = 500
+_DINGTALK_WEBHOOK_RE = re.compile(r'^https://api\.dingtalk\.com/')
 
 
 def check_dingtalk_requirements() -> bool:
@@ -194,9 +197,15 @@ class DingTalkAdapter(BasePlatformAdapter):
         chat_id = conversation_id or sender_id
         chat_type = "group" if is_group else "dm"
 
-        # Store session webhook for reply routing
+        # Store session webhook for reply routing (validate origin to prevent SSRF)
         session_webhook = getattr(message, "session_webhook", None) or ""
-        if session_webhook and chat_id:
+        if session_webhook and chat_id and _DINGTALK_WEBHOOK_RE.match(session_webhook):
+            if len(self._session_webhooks) >= _SESSION_WEBHOOKS_MAX:
+                # Evict oldest entry to cap memory growth
+                try:
+                    self._session_webhooks.pop(next(iter(self._session_webhooks)))
+                except StopIteration:
+                    pass
             self._session_webhooks[chat_id] = session_webhook
 
         source = self.build_source(

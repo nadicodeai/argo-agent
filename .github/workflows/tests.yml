@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [argo]
+    branches: [main]
   pull_request:
-    branches: [argo]
+    branches: [main]
 
 # Cancel in-progress runs for the same PR/branch
 concurrency:
