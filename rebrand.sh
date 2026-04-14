@@ -146,6 +146,7 @@ sed_files \
     -e 's/"❌ Hermes update failed/"❌ Argo update failed/' \
     -e 's/"❌ Hermes update timed out/"❌ Argo update timed out/' \
     -e 's/users configure Hermes features/users configure Argo features/g' \
+    -e 's/Share these links with the Hermes team for support/Share these links with the Argo team for support/' \
     -- gateway/run.py
 
 # format_managed_message output (embedded in /update reply → adapter.send → user chat)

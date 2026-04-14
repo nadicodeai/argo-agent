@@ -60,6 +60,7 @@ jobs:
           context: .
           file: Dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: |
             ghcr.io/nadicodeai/argo-agent:latest
             ghcr.io/nadicodeai/argo-agent:${{ github.sha }}
@@ -73,6 +74,7 @@ jobs:
           context: .
           file: Dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: |
             ghcr.io/nadicodeai/argo-agent:latest
             ghcr.io/nadicodeai/argo-agent:${{ github.event.release.tag_name }}
