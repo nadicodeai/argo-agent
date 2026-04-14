@@ -127,6 +127,34 @@ sed_files \
 sed_files -e 's/conversation between Hermes Agent and the User/conversation between Argo Agent and the User/g' -- \
     plugins/memory/hindsight/__init__.py
 
+# Telegram BotCommands menu (visible to every user via setMyCommands autocomplete)
+sed_files -e 's/"Update Hermes Agent to the latest version"/"Update Argo Agent to the latest version"/' -- \
+    hermes_cli/commands.py
+
+# Gateway command-handler replies sent to users via adapter.send()
+# All commands are reachable by any allowlisted user — no per-command gating.
+sed_files \
+    -e 's/A home channel is where Hermes delivers/A home channel is where Argo delivers/' \
+    -e 's|`pip install faster-whisper` in the Hermes venv|`pip install faster-whisper` in the Argo venv|' \
+    -e 's/📊 \*\*Hermes Gateway Status\*\*/📊 **Argo Gateway Status**/' \
+    -e 's/📖 \*\*Hermes Commands\*\*/📖 **Argo Commands**/' \
+    -e 's/Install or reinstall Hermes with the messaging extra/Install or reinstall Argo with the messaging extra/' \
+    -e "s/format_managed_message('update Hermes Agent')/format_managed_message('update Argo Agent')/" \
+    -e 's/"Hermes is running, but the update command could not find/"Argo is running, but the update command could not find/' \
+    -e 's/"⚕ Starting Hermes update/"⚕ Starting Argo update/' \
+    -e 's/"✅ Hermes update finished/"✅ Argo update finished/' \
+    -e 's/"❌ Hermes update failed/"❌ Argo update failed/' \
+    -e 's/"❌ Hermes update timed out/"❌ Argo update timed out/' \
+    -e 's/users configure Hermes features/users configure Argo features/g' \
+    -- gateway/run.py
+
+# format_managed_message output (embedded in /update reply → adapter.send → user chat)
+sed_files \
+    -e 's/"modify this Hermes installation"/"modify this Argo installation"/' \
+    -e 's/this Hermes installation is managed by/this Argo installation is managed by/g' \
+    -e 's/Use your package manager to upgrade or reinstall Hermes\./Use your package manager to upgrade or reinstall Argo./' \
+    -- hermes_cli/config.py
+
 # ---- Tests (lockstep) ----
 
 sed_files -e 's/"Hermes Agent"/"Argo Agent"/g' -- \
