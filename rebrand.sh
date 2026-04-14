@@ -37,6 +37,15 @@ sed_files() {
     fi
 }
 
+# ---- CI workflow triggers: main → argo ----
+# Upstream runs Tests and Nix only on main. argo fork needs them on argo pushes.
+# docker-publish.yml is hand-maintained (different structure, GHCR, etc.) so it's
+# not swept here.
+sed_files \
+    -e 's/branches: \[main\]/branches: [argo]/g' \
+    -- .github/workflows/tests.yml \
+       .github/workflows/nix.yml
+
 # ---- AGENTS.md fork notice (idempotent) ----
 # Prepends a notice at the top of AGENTS.md so any agent reading it
 # immediately knows this is the argo fork, not upstream hermes-agent.
