@@ -121,6 +121,8 @@ sed_files \
     -e 's/"owned_by": "hermes"/"owned_by": "argo"/' \
     -e 's/"root": "hermes-agent"/"root": "argo-agent"/' \
     -e 's/body.get("model", "hermes-agent")/body.get("model", "argo-agent")/g' \
+    -e 's/return "hermes-agent"/return "argo-agent"/' \
+    -e 's/3\. Fallback: "hermes-agent"/3. Fallback: "argo-agent"/' \
     -- gateway/platforms/api_server.py
 
 # Insights (gateway format only; terminal format stays admin-only)
@@ -178,6 +180,10 @@ sed_files -e 's/"Hermes Agent"/"Argo Agent"/g' -- \
 sed_files -e 's/"Re: Hermes Agent"/"Re: Argo Agent"/g' -- tests/gateway/test_email.py
 sed_files -e 's/payload\["markdown"\]\["title"\] == "Hermes"/payload["markdown"]["title"] == "Argo"/' -- tests/gateway/test_dingtalk.py
 sed_files -e 's|"/hermes" in|"/argo" in|' -- tests/gateway/test_slack.py
+
+# Gateway /update command test assertions (mirror the chat replies rebranded in gateway/run.py)
+sed_files -e 's/"Starting Hermes update"/"Starting Argo update"/' -- \
+    tests/gateway/test_update_command.py
 sed_files \
     -e 's/assert data\["platform"\] == "hermes-agent"/assert data["platform"] == "argo-agent"/' \
     -e 's/assert data\["data"\]\[0\]\["id"\] == "hermes-agent"/assert data["data"][0]["id"] == "argo-agent"/' \
