@@ -284,7 +284,7 @@ class TestHealthEndpoint:
 
 class TestModelsEndpoint:
     @pytest.mark.asyncio
-    async def test_models_returns_hermes_agent(self, adapter):
+    async def test_models_returns_argo_agent(self, adapter):
         app = _create_app(adapter)
         async with TestClient(TestServer(app)) as cli:
             resp = await cli.get("/v1/models")
@@ -293,7 +293,7 @@ class TestModelsEndpoint:
             assert data["object"] == "list"
             assert len(data["data"]) == 1
             assert data["data"][0]["id"] == "argo-agent"
-            assert data["data"][0]["owned_by"] == "hermes"
+            assert data["data"][0]["owned_by"] == "argo"
 
     @pytest.mark.asyncio
     async def test_models_returns_profile_name(self):
@@ -320,9 +320,9 @@ class TestModelsEndpoint:
         assert APIServerAdapter._resolve_model_name("my-bot") == "my-bot"
 
     def test_resolve_model_name_default_profile(self):
-        """Default profile falls back to 'hermes-agent'."""
+        """Default profile falls back to 'argo-agent'."""
         with patch("hermes_cli.profiles.get_active_profile_name", return_value="default"):
-            assert APIServerAdapter._resolve_model_name("") == "hermes-agent"
+            assert APIServerAdapter._resolve_model_name("") == "argo-agent"
 
     def test_resolve_model_name_named_profile(self):
         """Named profile uses the profile name as model name."""
