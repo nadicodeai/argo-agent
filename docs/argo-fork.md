@@ -18,15 +18,16 @@ upstream lightweight.
 ## Branch model
 
 - **`argo`** — deployment branch. Built from the latest upstream release tag
-  plus two layers of local modifications:
-  1. **Honcho session-rebind fix** for NousResearch/hermes-agent#5947 Bug A
-     (per-turn `_session_key` refresh in `HonchoMemoryProvider`, touches
-     `plugins/memory/honcho/__init__.py` and `run_agent.py`). Applied as a
-     `git apply` of `nadicode-agent-fleet/patches/hermes-agent/0001-rebind-session-per-turn.patch`.
-     Should go upstream eventually; once merged, drop it.
-  2. **Rebrand** of user-facing strings via `rebrand.sh`. Idempotent,
+  plus one layer of local modifications:
+  1. **Rebrand** of user-facing strings via `rebrand.sh`. Idempotent,
      tolerant of missing files (see the script), so the same rules work
      across different upstream release tags without editing.
+
+  The honcho session-rebind fix (NousResearch/hermes-agent#5947 Bug A) was
+  upstreamed in v2026.4.16. Earlier argo builds applied it as
+  `nadicode-agent-fleet/patches/hermes-agent/0001-rebind-session-per-turn.patch`;
+  that patch is now obsolete and must not be re-applied — `git apply` will
+  fail against v2026.4.16+ because the code is already there.
 - **`main`** — not used by this fork. Upstream's dev branch moves too fast
   to track safely (hundreds of commits per week). If you need to see what's
   brewing upstream, use `git fetch upstream && git log upstream/main`.
@@ -82,20 +83,21 @@ an ancestor of every new tip, so plain `git push` always works. The cost
 is a longer commit history (one merge commit per sync), which nobody reads
 anyway — argo is a deploy branch, not an authored project.
 
-## When the honcho fix (or any other local patch) lands upstream
+## When a local patch lands upstream
 
-Check after each release sync: the scheduled agent reports any upstream
-commits touching `plugins/memory/honcho/` or `run_agent.py` — that's the
-early-warning signal. When a release tag ships that contains the upstreamed
-fix, drop the local patch:
+If any future local patch is added to the argo build pipeline (there are
+none right now), watch each release sync for upstream commits that cover
+the same area. When a release tag ships with the fix:
 
-1. Remove the `git apply` step from the next argo rebuild (see `rebrand.sh`
-   and the scheduled trigger prompt).
-2. The next sync's merge will bring in upstream's version of the file; the
-   local patched version gets superseded. No action needed beyond the normal
-   merge.
-3. If the merge conflicts on honcho files, prefer upstream's version:
-   `git checkout --theirs plugins/memory/honcho/__init__.py run_agent.py`
+1. Remove the `git apply` step from the build pipeline that uses it (e.g.
+   `nadicode-agent-fleet/Dockerfile`).
+2. The next sync's merge will bring in upstream's version; no action needed
+   beyond the normal merge.
+3. If the merge conflicts on the patched files, prefer upstream:
+   `git checkout --theirs <paths>`.
+
+The honcho session-rebind patch followed this path and was retired in the
+v2026.4.16 sync.
 
 ## What gets rebranded
 
