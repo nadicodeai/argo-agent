@@ -1,14 +1,18 @@
 # Argo Fork
 
-This is the `argo` branch of a fork of NousResearch/hermes-agent. It exists
-to deploy messaging bots (Telegram, WhatsApp, Discord, Slack, etc.) under the
-"Argo" brand instead of "Hermes".
+This fork exists to deploy messaging bots (Telegram, WhatsApp, Discord,
+Slack, etc.) under the "Argo" brand instead of "Hermes".
 
-Argo is a **stable deploy branch**: it tracks upstream **release tags**, not
-`upstream/main`. Main is the upstream dev branch where new code lands hourly
-and is not curated for release. Releases are cut as tags (`v2026.4.8`,
-`v2026.4.3`, …, CalVer `vYYYY.M.D` + semver `v0.x.0` naming) every 3-7 days.
-Argo merges each new release tag on a daily scheduled sync.
+The fork uses a **two-branch downstream model**:
+
+- `main` is a **pure mirror** of `upstream/main`
+- `argo` is the **stable deploy branch**, updated from upstream **release
+  tags**, then refreshed with `rebrand.sh`
+
+Upstream `main` is where new code lands hourly and is not curated for release.
+Releases are cut as tags (`v2026.4.8`, `v2026.4.3`, ..., CalVer `vYYYY.M.D`
+and semver `v0.x.0` naming) every 3-7 days. Argo consumes those tags, not the
+live upstream branch tip.
 
 Only text that **reaches end users on messaging platforms** is rebranded.
 The CLI, setup wizard, env vars, module names, config paths, docs, etc. are
@@ -17,41 +21,68 @@ upstream lightweight.
 
 ## Branch model
 
-- **`argo`** — deployment branch. Built from the latest upstream release tag
-  plus one layer of local modifications:
-  1. **Rebrand** of user-facing strings via `rebrand.sh`. Idempotent,
-     tolerant of missing files (see the script), so the same rules work
-     across different upstream release tags without editing.
-- **`main`** — not used by this fork. Upstream's dev branch moves too fast
-  to track safely (hundreds of commits per week). If you need to see what's
-  brewing upstream, use `git fetch upstream && git log upstream/main`.
-  There is no local `main` branch maintained in this fork's workflow.
+- **`main`** — exact mirror of `upstream/main`
+  - Fast-forward only
+  - No fork-specific commits
+  - Useful for diffing, forecasting conflicts, and seeing what is brewing
+    upstream
+- **`argo`** — deployment branch
+  - Built from the latest upstream release tag plus one layer of local
+    modifications
+  - Local modification layer is the **rebrand** of user-facing strings via
+    `rebrand.sh`
+  - `rebrand.sh` is idempotent and tolerant of missing files, so the same
+    rules work across different upstream release tags without editing
 
 **Always deploy from `argo`, never from anything else.**
 
-## Sync workflow (release-tag tracking, merge-based, no force-push)
+## Sync workflow (mirror `main`, tag-track `argo`, no force-push)
 
-The daily scheduled agent (and you, when syncing by hand) follow the same
-recipe: fetch upstream tags, find the latest release tag, if it isn't
-already in argo's ancestry merge it in, re-run rebrand, push.
+Each sync has two independent steps:
+
+1. **Mirror upstream development** by fast-forwarding local `main` to
+   `upstream/main`
+2. **Advance the deploy branch** by merging the latest upstream release tag
+   into `argo`, then re-running `rebrand.sh`
+
+This repo ships a helper for that:
 
 ```bash
-git fetch upstream --tags
-LATEST_TAG=$(git tag -l 'v2*.*.*' --sort=-v:refname | head -1)
+bash scripts/sync_argo_fork.sh --push
+```
+
+Equivalent manual flow:
+
+```bash
+git fetch upstream main --tags
+
+git checkout main
+git merge --ff-only upstream/main
+git push origin main
+
+LATEST_TAG=$(git tag -l 'v*' --sort=-v:refname | head -1)
+
 git checkout argo
 git pull origin argo --ff-only
 
 if git merge-base --is-ancestor "$LATEST_TAG" argo; then
     echo "argo already contains $LATEST_TAG — nothing to sync"
-    exit 0
-fi
+else
+    git merge "$LATEST_TAG" --no-edit   # regular merge commit
+    bash rebrand.sh                     # catches any new "Hermes" strings
 
-git merge "$LATEST_TAG" --no-edit      # regular merge commit
-bash rebrand.sh                        # catches any new "Hermes" strings
-git add -A
-git commit --amend --no-edit           # fold rebrand refresh into merge commit
-git push origin argo                   # plain push, no -f, ever
+    if ! git diff --quiet; then
+        git add -A
+        git commit --amend --no-edit
+    fi
+
+    git push origin argo
+fi
 ```
+
+Syncing `main` first is good repository hygiene, but it is not what selects
+the release for `argo`. The **tag** remains the source of truth for the deploy
+branch.
 
 If the merge hits conflicts, they'll usually be on lines where upstream
 touched code near a rebranded string. Resolve by keeping upstream's
@@ -60,7 +91,20 @@ the next step. If `rebrand.sh` itself fails, it's because a rebrand rule's
 target file was renamed or restructured upstream — update the rule and
 re-run.
 
-### Why release tags and not main
+### Why mirror `main`
+
+Keeping `main` as a clean upstream mirror is standard practice for long-lived
+downstream forks:
+
+- upstream diffing stays easy
+- you can inspect unreleased upstream changes without contaminating `argo`
+- conflicts are smaller because `main` is always current
+- you can verify whether a fork-only patch has landed upstream yet
+
+The mirror branch only works if it stays pure. Treat direct commits to
+`main` as policy violations.
+
+### Why release tags and not `main`
 
 Tracking `upstream/main` means every sync pulls in whatever landed in the
 last 24h — half-finished features, pre-fix bugs, refactor dust. For a stable
@@ -79,15 +123,29 @@ anyway — argo is a deploy branch, not an authored project.
 
 ## When a local patch lands upstream
 
-If any future local patch is added to the argo build pipeline (there are
-none right now), watch each release sync for upstream commits that cover
-the same area. When a release tag ships with the fix:
+If any future local patch is added to the argo build pipeline, watch each
+release sync for upstream commits that cover the same area. When a release
+tag ships with the fix:
 
 1. Remove the `git apply` step from the build pipeline that uses it.
 2. The next sync's merge will bring in upstream's version; no action needed
    beyond the normal merge.
 3. If the merge conflicts on the patched files, prefer upstream:
    `git checkout --theirs <paths>`.
+
+## Operational rules
+
+- Do not commit fork-only work to `main`
+- Open fork-maintenance changes against `argo`
+- Keep `argo` focused: rebrand first, temporary fixes only when needed
+- Temporary fixes waiting on upstream should be normal commits on `argo`, not a
+  separate patch registry
+- Planning docs, local editor config, and similar branch noise do not belong on
+  `argo`
+- If GitHub keeps `main` as the default branch, document clearly that it is a
+  mirror branch, not the deploy branch
+- If you want to make contributor intent obvious, consider making `argo` the
+  default branch on GitHub
 
 ## What gets rebranded
 
@@ -166,4 +224,4 @@ When upstream introduces a new user-facing "Hermes" string:
 1. Edit `rebrand.sh` — add a targeted `sed` rule. **Use literal strings,
    not line numbers**, so the rule survives upstream line shifts.
 2. Re-run `bash rebrand.sh` and inspect `git diff` to confirm the rule matches.
-3. Rebuild argo (either rebase or nuke-and-rebuild).
+3. Re-run the normal argo sync flow and verify the rule stays idempotent.
