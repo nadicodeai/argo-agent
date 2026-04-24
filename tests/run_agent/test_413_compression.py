@@ -19,6 +19,24 @@ import pytest
 
 from agent.context_compressor import SUMMARY_PREFIX
 from run_agent import AIAgent
+import run_agent
+
+
+# ---------------------------------------------------------------------------
+# Fast backoff for compression retry tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture(autouse=True)
+def _no_compression_sleep(monkeypatch):
+    """Short-circuit the 2s time.sleep between compression retries.
+
+    Production code has ``time.sleep(2)`` in multiple places after a 413/context
+    compression, for rate-limit smoothing. Tests assert behavior, not timing.
+    """
+    import time as _time
+    monkeypatch.setattr(_time, "sleep", lambda *_a, **_k: None)
+    monkeypatch.setattr(run_agent, "jittered_backoff", lambda *a, **k: 0.0)
 
 
 # ---------------------------------------------------------------------------
@@ -69,6 +87,7 @@ def agent():
     ):
         a = AIAgent(
             api_key="test-key-1234567890",
+            base_url="https://openrouter.ai/api/v1",
             quiet_mode=True,
             skip_context_files=True,
             skip_memory=True,
@@ -430,12 +449,15 @@ class TestPreflightCompression:
             )
             result = agent.run_conversation("hello", conversation_history=big_history)
 
-        # The first compression call must be the preflight reduction of the
-        # oversized loaded history before the API request. A later post-turn
-        # compaction pass may also run on the compressed transcript.
-        assert mock_compress.call_count >= 1
+        # Preflight compression is a multi-pass loop for oversized sessions.
+        # The first pass must see the full loaded history plus the new user
+        # message before any reduction happens.
+        assert mock_compress.call_count >= 1, "Preflight compression never ran"
         first_messages = mock_compress.call_args_list[0].args[0]
-        assert len(first_messages) == len(big_history) + 1
+        assert len(first_messages) == len(big_history) + 1, (
+            f"First preflight pass should see the full history + user message, got "
+            f"{len(first_messages)} messages"
+        )
         assert first_messages[-1] == {"role": "user", "content": "hello"}
         assert result["completed"] is True
         assert result["final_response"] == "After preflight"
