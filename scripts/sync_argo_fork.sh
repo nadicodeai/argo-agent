@@ -4,23 +4,28 @@ set -euo pipefail
 
 usage() {
     cat <<'EOF'
-Usage: bash scripts/sync_argo_fork.sh [--push]
+Usage: bash scripts/sync_argo_fork.sh [--no-push-main] [--push-argo]
 
 Sync policy for the argo fork:
-- `main` is fast-forwarded to `upstream/main`
+- `main` is fast-forwarded to `upstream/main` and pushed to `origin/main`
 - `argo` merges the latest upstream release tag, then re-runs `rebrand.sh`
 
-By default the script updates local branches only.
-Use `--push` to push `main` and `argo` to `origin`.
+Pushing `main` is the standard procedure and runs by default.
+Use `--no-push-main` to skip it (local-only dry run).
+Use `--push-argo` to also push `argo` to `origin`.
 EOF
 }
 
-push_changes=0
+push_main=1
+push_argo=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
-        --push)
-            push_changes=1
+        --no-push-main)
+            push_main=0
+            ;;
+        --push-argo)
+            push_argo=1
             ;;
         -h|--help)
             usage
@@ -64,16 +69,17 @@ fi
 echo "Latest upstream release tag: $latest_tag"
 
 echo "Syncing main to upstream/main"
-git checkout main >/dev/null 2>&1
-git merge --ff-only upstream/main
+git update-ref refs/heads/main refs/remotes/upstream/main
 
-if [ "$push_changes" -eq 1 ]; then
+echo "Switching to argo worktree for pushes and tag merge"
+git checkout argo >/dev/null 2>&1
+git pull origin argo --ff-only
+
+if [ "$push_main" -eq 1 ]; then
     git push origin main
 fi
 
 echo "Syncing argo from $latest_tag"
-git checkout argo >/dev/null 2>&1
-git pull origin argo --ff-only
 
 if git merge-base --is-ancestor "$latest_tag" argo; then
     echo "argo already contains $latest_tag"
@@ -86,7 +92,7 @@ else
         git commit --amend --no-edit
     fi
 
-    if [ "$push_changes" -eq 1 ]; then
+    if [ "$push_argo" -eq 1 ]; then
         git push origin argo
     fi
 fi

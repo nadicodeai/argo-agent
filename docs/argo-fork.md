@@ -48,7 +48,8 @@ Each sync has two independent steps:
 This repo ships a helper for that:
 
 ```bash
-bash scripts/sync_argo_fork.sh --push
+bash scripts/sync_argo_fork.sh            # pushes main by default
+bash scripts/sync_argo_fork.sh --push-argo # also push argo after rebrand
 ```
 
 Equivalent manual flow:
@@ -56,14 +57,14 @@ Equivalent manual flow:
 ```bash
 git fetch upstream main --tags
 
-git checkout main
-git merge --ff-only upstream/main
-git push origin main
+git update-ref refs/heads/main refs/remotes/upstream/main
 
 LATEST_TAG=$(git tag -l 'v*' --sort=-v:refname | head -1)
 
 git checkout argo
 git pull origin argo --ff-only
+
+git push origin main
 
 if git merge-base --is-ancestor "$LATEST_TAG" argo; then
     echo "argo already contains $LATEST_TAG — nothing to sync"
@@ -83,6 +84,11 @@ fi
 Syncing `main` first is good repository hygiene, but it is not what selects
 the release for `argo`. The **tag** remains the source of truth for the deploy
 branch.
+
+Push `origin/main` from the `argo` worktree, not while checked out on `main`.
+This machine has a global pre-push `gitleaks` hook, and `.gitleaks.toml` lives
+on `argo`. Pushing `main` while the worktree is on `main` can fail on upstream
+false positives that are already allowlisted on `argo`.
 
 If the merge hits conflicts, they'll usually be on lines where upstream
 touched code near a rebranded string. Resolve by keeping upstream's
