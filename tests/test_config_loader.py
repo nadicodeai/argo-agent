@@ -34,7 +34,8 @@ def test_load_seed_config() -> None:
     # T3.1 populated mappings: expect at least the 17 required entries.
     assert len(cfg.mappings) >= 17
     # At least 3 exceptions: .shepherd/**, argo-rename.yaml, bin/argo-bootstrap.py
-    # (test_full_rename_config.py is also excepted to preserve hermes-* literals)
+    # (test_full_rename_config.py is also excepted because it asserts on rename
+    # source-side literals — those must survive an engine pass.)
     assert len(cfg.exceptions) >= 3
     # Three skip_context patterns (URL, sha40, sha64)
     assert len(cfg.skip_contexts) == 3
