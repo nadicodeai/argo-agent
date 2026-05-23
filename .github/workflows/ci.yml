@@ -1,0 +1,103 @@
+name: CI
+
+# Fires on every push and pull-request.
+# Companion to the existing tests.yml (which runs the full parallel suite).
+# This file owns: lint, type-check, leakage scans, and the stub-model smoke.
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Lint + Type + Unit + Smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install argo-agent
+        # --frozen refuses to update uv.lock — fails fast if pyproject.toml
+        # and uv.lock are out of sync (run `uv lock` locally and commit).
+        run: uv sync --frozen --all-extras
+
+      - name: Lint (ruff)
+        # Enforce the subset of rules in [tool.ruff.lint.select] across the
+        # files that are in-scope for this milestone (argo_sync, CLI helpers,
+        # and the new test/fixture files).  The broader tree is covered by
+        # lint.yml (ruff-blocking job) which runs the full `ruff check .`.
+        run: |
+          uv run ruff check \
+            argo_sync \
+            argo_cli/argo_update.py \
+            argo_cli/doctor_leakage.py \
+            tests/test_deployment_smoke.py \
+            tests/fixtures/recorded_model/server.py
+
+      - name: Type-check (ty)
+        # ty is a fast Rust-based type checker.  Only the files we own are
+        # checked — the full tree check is advisory via lint.yml.
+        run: |
+          uv run ty check \
+            argo_sync \
+            argo_cli/argo_update.py \
+            argo_cli/doctor_leakage.py \
+            tests/test_deployment_smoke.py \
+            tests/fixtures/recorded_model/server.py
+
+      - name: Unit + integration tests (non-network)
+        # This is the canonical non-network subset from the milestone plan.
+        # Excludes tests that require external services, API keys, or the
+        # parallel runner.
+        run: |
+          uv run pytest \
+            tests/test_engine.py \
+            tests/test_config_loader.py \
+            tests/test_full_rename_config.py \
+            tests/test_idempotency.py \
+            tests/test_bootstrap.py \
+            tests/test_cmd_argo_update.py \
+            tests/test_cmd_argo_doctor.py \
+            tests/test_content_pass.py \
+            tests/test_filename_pass.py \
+            tests/test_directory_pass.py \
+            tests/test_manifest.py \
+            tests/test_config_self_protection.py \
+            tests/test_engine_integration.py \
+            -v
+        env:
+          OPENROUTER_API_KEY: ""
+          OPENAI_API_KEY: ""
+          NOUS_API_KEY: ""
+
+      - name: Static leakage scan
+        # Walks the full repo tree and exits non-zero on any upstream-
+        # identifier hit not covered by exceptions in argo-rename.yaml.
+        # This is the static half of AC-2.
+        run: uv run argo doctor --static
+
+      - name: Live leakage smoke (--help/--version only)
+        # Runs argo --help, --version, doctor --help, update --help and scans
+        # their output.  No model backend required — this is the fast live
+        # half of AC-2 that confirms argo boots without import errors.
+        run: uv run argo doctor --live
+
+      - name: Deployment smoke against stub model
+        # Full AC-2 gate: boots argo with a real agent loop against the
+        # deterministic stub-model HTTP server.  No API key, no network.
+        run: uv run pytest tests/test_deployment_smoke.py -v -m integration
+        env:
+          # Ensure no real API key leaks in from the runner environment.
+          OPENROUTER_API_KEY: ""
+          OPENAI_API_KEY: ""
+          NOUS_API_KEY: ""
+          ANTHROPIC_API_KEY: ""
