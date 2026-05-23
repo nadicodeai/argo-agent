@@ -52,44 +52,48 @@ def test_mappings_sorted_longest_first(config: RenameConfig) -> None:
 
 
 def test_required_identifiers_present(config: RenameConfig) -> None:
-    """All required 'from' identifiers must be in the mappings."""
+    """All required 'from' identifiers must be in the mappings.
+
+    The rename config maps hermes-* identifiers to argo-* identifiers.
+    We verify the hermes-side (from) keys are all present.
+    """
     from_keys = {from_ for from_, _ in config.mappings}
     required = {
-        "ArgoAgent",
-        "argo-agent",
-        "argo_agent",
-        "argo_cli",
-        "argo_bootstrap",
-        "argo_constants",
-        "argo_state",
-        "argo_time",
-        "argo_logging",
-        "argo_tools_mcp_server",
-        "ARGO_HOME",
-        "ARGO_",
-        "~/.argo",
-        ".argo/",
-        "Argo",
-        "ARGO",
-        "argo",
+        "HermesAgent",
+        "hermes-agent",
+        "hermes_agent",
+        "hermes_cli",
+        "hermes_bootstrap",
+        "hermes_constants",
+        "hermes_state",
+        "hermes_time",
+        "hermes_logging",
+        "hermes_tools_mcp_server",
+        "HERMES_HOME",
+        "HERMES_",
+        "~/.hermes",
+        ".hermes/",
+        "Hermes",
+        "HERMES",
+        "hermes",
     }
     missing = required - from_keys
     assert not missing, f"Missing required 'from' keys: {sorted(missing)}"
 
 
 def test_required_to_values_correct(config: RenameConfig) -> None:
-    """Key mappings must have the correct 'to' values."""
+    """Key mappings must produce the correct 'to' (argo-side) values."""
     mapping_dict = dict(config.mappings)
     expected = {
-        "ArgoAgent": "ArgoAgent",
-        "argo-agent": "argo-agent",
-        "argo_agent": "argo_agent",
-        "argo_cli": "argo_cli",
-        "ARGO_HOME": "ARGO_HOME",
-        "ARGO_": "ARGO_",
-        "Argo": "Argo",
-        "ARGO": "ARGO",
-        "argo": "argo",
+        "HermesAgent": "ArgoAgent",
+        "hermes-agent": "argo-agent",
+        "hermes_agent": "argo_agent",
+        "hermes_cli": "argo_cli",
+        "HERMES_HOME": "ARGO_HOME",
+        "HERMES_": "ARGO_",
+        "Hermes": "Argo",
+        "HERMES": "ARGO",
+        "hermes": "argo",
     }
     for from_, to_ in expected.items():
         assert mapping_dict.get(from_) == to_, (
@@ -132,18 +136,27 @@ def test_skip_contexts_non_empty(config: RenameConfig) -> None:
 
 
 def test_longer_argo_agent_before_shorter_argo(config: RenameConfig) -> None:
-    """'argo_agent' must appear before 'argo' in the sorted mapping list."""
+    """'hermes_agent' must appear before 'hermes' in the sorted mapping list.
+
+    Longer from-keys must shadow shorter ones; hermes_agent (12 chars)
+    must come before hermes (6 chars) to avoid partial replacement.
+    """
     froms = [f for f, _ in config.mappings]
-    assert "argo_agent" in froms, "argo_agent not in mappings"
-    assert "argo" in froms, "argo not in mappings"
-    assert froms.index("argo_agent") < froms.index("argo"), (
-        "argo_agent must come before argo in the sorted order"
+    assert "hermes_agent" in froms, "hermes_agent not in mappings"
+    assert "hermes" in froms, "hermes not in mappings"
+    assert froms.index("hermes_agent") < froms.index("hermes"), (
+        "hermes_agent must come before hermes in the sorted order"
     )
 
 
 def test_argo_home_before_argo_bare(config: RenameConfig) -> None:
-    """'ARGO_HOME' must appear before bare 'ARGO' entry."""
+    """'HERMES_HOME' must appear before bare 'HERMES' entry.
+
+    HERMES_HOME (10 chars) must shadow HERMES (6 chars) in longest-first order.
+    """
     froms = [f for f, _ in config.mappings]
-    assert froms.index("ARGO_HOME") < froms.index("ARGO"), (
-        "ARGO_HOME must come before ARGO in sorted order"
+    assert "HERMES_HOME" in froms, "HERMES_HOME not in mappings"
+    assert "HERMES" in froms, "HERMES not in mappings"
+    assert froms.index("HERMES_HOME") < froms.index("HERMES"), (
+        "HERMES_HOME must come before HERMES in sorted order"
     )

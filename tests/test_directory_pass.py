@@ -134,14 +134,28 @@ def test_hard_coded_skip_dirs_not_renamed(tmp_path: Path, skip_name: str) -> Non
     # Construct a mapping that would match the skip-dir name.
     # E.g. ".git" contains "git"; "__pycache__" contains "pycache".
     raw = skip_name.lstrip("._")  # "git", "venv", "argo", "pycache", "node_modules"
-    target_name = raw + "_renamed"
-    (tmp_path / skip_name).mkdir()
+    # Use a sentinel suffix unlikely to clash with conftest-created directories.
+    target_name = raw + "_xXx_should_not_exist"
+    # Note: conftest may already have created subdirs in tmp_path (e.g.,
+    # "argo_test" for ARGO_HOME isolation). We only care that the skip-dir
+    # itself is untouched, not that the whole result set is empty.
+    skip_dir = tmp_path / skip_name
+    if not skip_dir.exists():
+        skip_dir.mkdir()
 
     cfg = make_config([(raw, target_name)])
-    result = DirectoryPass(cfg).run(tmp_path)
+    DirectoryPass(cfg).run(tmp_path)
 
-    assert (tmp_path / skip_name).is_dir()
-    assert result == []
+    # The skip dir must still exist and must NOT have been renamed.
+    assert skip_dir.is_dir(), f"{skip_name!r} was incorrectly renamed or deleted"
+    # The would-be-renamed variant of the skip dir must NOT exist.
+    # (For ".argo" with mapping "argo→argo_xXx", the engine would produce
+    # ".argo_xXx_should_not_exist" — NOT the raw target_name sans dot.)
+    dot_prefix = skip_name[: len(skip_name) - len(raw)]  # e.g. "." or "__"
+    renamed_skip = tmp_path / (dot_prefix + target_name)
+    assert not renamed_skip.exists(), (
+        f"{skip_name!r} appears to have been renamed to {renamed_skip.name!r}"
+    )
 
 
 # ---------------------------------------------------------------------------
