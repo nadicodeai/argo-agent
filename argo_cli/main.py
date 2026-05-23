@@ -13230,50 +13230,49 @@ Examples:
 
     # =========================================================================
     # update command
+    # argo update: re-implemented as upstream sync (was: PyPI self-updater) — see argo_cli/argo_update.py
     # =========================================================================
+    from argo_cli.argo_update import cmd_argo_update  # noqa: PLC0415
+
     update_parser = subparsers.add_parser(
         "update",
-        help="Update Argo Agent to the latest version",
-        description="Pull the latest changes from git and reinstall dependencies",
+        help="Fetch upstream-mirror, merge into main, run rename engine, commit",
+        description=(
+            "Sync argo-agent with upstream: fetch upstream → merge upstream-mirror "
+            "→ run rename engine → commit. Replaces the former PyPI self-updater."
+        ),
     )
     update_parser.add_argument(
-        "--gateway",
-        action="store_true",
-        default=False,
-        help="Gateway mode: use file-based IPC for prompts instead of stdin (used internally by /update)",
+        "--upstream-branch",
+        default="upstream-mirror",
+        metavar="BRANCH",
+        help="Local branch tracking upstream content (default: upstream-mirror)",
     )
     update_parser.add_argument(
-        "--check",
+        "--rename-only",
         action="store_true",
         default=False,
-        help="Check whether an update is available without installing anything",
+        help="Skip fetch + merge; run only rename engine + commit.",
     )
     update_parser.add_argument(
-        "--no-backup",
+        "--merge-only",
         action="store_true",
         default=False,
-        help="Skip the pre-update backup for this run (overrides updates.pre_update_backup)",
+        help="Skip rename engine + commit; only fetch + update mirror + merge.",
     )
     update_parser.add_argument(
-        "--backup",
+        "--dry-run",
         action="store_true",
         default=False,
-        help="Force a pre-update backup for this run (off by default; overrides updates.pre_update_backup)",
+        help="Report what would happen; make no mutations.",
     )
     update_parser.add_argument(
-        "--yes",
-        "-y",
+        "--resume",
         action="store_true",
         default=False,
-        help="Assume yes for interactive prompts (config migration, stash restore). API-key entry is skipped; run 'argo config migrate' separately for those.",
+        help="Resume a previously interrupted merge from .argo/sync-state.json.",
     )
-    update_parser.add_argument(
-        "--force",
-        action="store_true",
-        default=False,
-        help="Windows: proceed with the update even when another argo.exe is detected. The concurrent process will likely cause WinError 32 warnings and may leave a reboot-deferred .exe replacement.",
-    )
-    update_parser.set_defaults(func=cmd_update)
+    update_parser.set_defaults(func=cmd_argo_update)
 
     # =========================================================================
     # uninstall command
