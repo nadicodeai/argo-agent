@@ -6150,7 +6150,41 @@ def cmd_hooks(args):
 
 
 def cmd_doctor(args):
-    """Check configuration and dependencies."""
+    """Check configuration and dependencies.
+
+    Registered via argparse in build_parser (single-function handler, not class-based).
+    --static and --live are dispatched to doctor_leakage before the general checks run.
+    """
+    import sys as _sys
+    from pathlib import Path as _Path
+
+    leakage_static = getattr(args, "leakage_static", False)
+    leakage_live = getattr(args, "leakage_live", False)
+
+    if leakage_static or leakage_live:
+        from argo_cli.doctor_leakage import run_static, run_live
+
+        # Resolve rename_yaml and repo_root from args or defaults.
+        _here = _Path(__file__).parent.parent
+        rename_yaml_arg = getattr(args, "rename_yaml", None)
+        repo_root_arg = getattr(args, "repo_root", None)
+        rename_yaml = _Path(rename_yaml_arg) if rename_yaml_arg else (_here / "argo-rename.yaml")
+        repo_root = _Path(repo_root_arg) if repo_root_arg else _here
+
+        hits = []
+        if leakage_static:
+            hits.extend(run_static(repo_root, rename_yaml, verbose=True))
+        if leakage_live:
+            live_cmd = getattr(args, "live_cmd", None)
+            hits.extend(run_live(rename_yaml, live_cmd=live_cmd, verbose=True))
+
+        if hits:
+            print(f"\n{len(hits)} leakage hit(s) found.", file=_sys.stderr)
+            _sys.exit(1)
+        else:
+            print("No leakage detected.")
+            _sys.exit(0)
+
     from argo_cli.doctor import run_doctor
 
     run_doctor(args)
@@ -11973,6 +12007,52 @@ def main():
             "Acknowledge a security advisory by ID and exit. After ack, the "
             "advisory will no longer trigger startup banners. Run `argo "
             "doctor` first to see active advisories and their IDs."
+        ),
+    )
+    # T4.2: --static leakage scan (registered via doctor_leakage.py)
+    doctor_parser.add_argument(
+        "--static",
+        action="store_true",
+        dest="leakage_static",
+        help=(
+            "Scan the repo tree for upstream-identifier leakage using "
+            "argo-rename.yaml mappings, exceptions, and skip_contexts. "
+            "Exit 0 on zero hits; non-zero otherwise."
+        ),
+    )
+    # T4.3: --live leakage scan (spawns subprocess and checks output)
+    doctor_parser.add_argument(
+        "--live",
+        action="store_true",
+        dest="leakage_live",
+        help=(
+            "Run a subprocess and capture its output, then scan for "
+            "upstream-identifier leakage. Exit 0 on zero hits; non-zero otherwise."
+        ),
+    )
+    # Shared leakage flags used by both --static and --live
+    doctor_parser.add_argument(
+        "--rename-yaml",
+        metavar="PATH",
+        default=None,
+        dest="rename_yaml",
+        help="Path to argo-rename.yaml (default: <repo-root>/argo-rename.yaml).",
+    )
+    doctor_parser.add_argument(
+        "--repo-root",
+        metavar="PATH",
+        default=None,
+        dest="repo_root",
+        help="Root directory to scan for --static (default: repo root).",
+    )
+    doctor_parser.add_argument(
+        "--live-cmd",
+        metavar="CMD",
+        default=None,
+        dest="live_cmd",
+        help=(
+            "Shell command to run for --live leakage check. "
+            "Defaults to `argo --help`, `argo --version`, `argo doctor --static`."
         ),
     )
     doctor_parser.set_defaults(func=cmd_doctor)
