@@ -4,10 +4,18 @@
 
 ## Current State
 
-- **Phase:** 1 (Setup) — complete. Beginning Phase 2 (Orchestration Loop).
-- **Active milestone:** M1 (Repository Bootstrap) — about to start.
-- **Completed milestones:** none yet.
-- **Active worktrees:** none.
+- **Phase:** 2 (Orchestration Loop).
+- **Active milestone:** M3 (First Real Rename — Bootstrap from Upstream) — about to dispatch T3.1 + T3.2.
+- **Completed milestones:** M1, M2.
+- **Test count on main:** 87 (all green).
+- **AC verified so far:** AC-3 (idempotency on synthetic fixtures).
+- **Active worktrees:** none yet for M3.
+- **Worktree placement:** siblings of repo at `/home/vadim/Code/argo-agent-wt/`.
+
+## Lessons Learned (process)
+
+- **Worktree isolation defaults to the orchestrator's cwd.** The Agent tool's `isolation: "worktree"` creates a worktree of WHATEVER repo the orchestrator's cwd belongs to. My cwd is `/home/vadim/Code/hermes-agent`, so a naive `isolation: "worktree"` created a hermes-agent worktree, not an argo-agent one. The T2.1 agent worked around this by writing directly to argo-agent's main. **From M2 onward: pre-create worktrees in argo-agent and pass the explicit path in the implementer prompt — do NOT rely on the auto-isolation.**
+- **Plan must get explicit sign-off.** I treated "pick defaults for OQs" as plan approval — wrong. The user pushed back; correct procedure restored.
 
 ## Quick Pointers
 
