@@ -349,7 +349,7 @@ def run_live(
         Path to argo-rename.yaml.
     live_cmd:
         Shell command to run.  When None the fallback set is used:
-        ``argo --help``, ``argo --version``, ``argo doctor --static``.
+        ``argo --help``, ``argo --version``, ``argo doctor --help``, and ``argo update --help``.
     verbose:
         When True, print each hit to stdout.
 
@@ -368,10 +368,14 @@ def run_live(
     else:
         # Fallback: safe CLI commands that exercise the real install without
         # recursively scanning the repo (so no false positives from test files).
+        # `doctor --help` is included to exercise the doctor module's own
+        # help-text rendering — a subset of the runtime code path beyond `--help`.
         argo_exe = [sys.executable, "-m", "argo_cli.main"]
         commands = [
             argo_exe + ["--help"],
             argo_exe + ["--version"],
+            argo_exe + ["doctor", "--help"],
+            argo_exe + ["update", "--help"],
         ]
         shell_commands = []
 

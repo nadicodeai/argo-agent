@@ -5,11 +5,14 @@
 ## Current State
 
 - **Phase:** 2 (Orchestration Loop).
-- **Active milestone:** M3 (First Real Rename — Bootstrap from Upstream) — about to dispatch T3.1 + T3.2.
-- **Completed milestones:** M1, M2.
-- **Test count on main:** 87 (all green).
-- **AC verified so far:** AC-3 (idempotency on synthetic fixtures).
-- **Active worktrees:** none yet for M3.
+- **Active milestone:** M4 (argo CLI Surfaces — update + doctor).
+- **Completed milestones:** M1, M2, M3.
+- **Test count on main:** 105 argo-platform tests (green). Upstream's renamed tests not run (need API keys).
+- **AC verified so far:** AC-3 (idempotency, synthetic + real-tree), AC-5 (bootstrap), AC-6 (argo CLI launches argo-branded).
+- **Files on main:** 3669.
+- **Active worktrees:**
+  - `/home/vadim/Code/argo-agent-wt/m4-update` — `argo/m4-update` (T4.1 + T4.4)
+  - `/home/vadim/Code/argo-agent-wt/m4-doctor` — `argo/m4-doctor` (T4.2 + T4.3)
 - **Worktree placement:** siblings of repo at `/home/vadim/Code/argo-agent-wt/`.
 
 ## Lessons Learned (process)

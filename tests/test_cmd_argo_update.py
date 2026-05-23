@@ -384,6 +384,13 @@ def test_conflict_writes_sync_state(tmp_path: Path) -> None:
     assert state.get("phase") == "merge"
     assert "upstream_sha" in state
 
+    # AC-4: the error output MUST tell the operator how to recover.
+    combined = (out + err).lower()
+    assert "resume" in combined, (
+        f"AC-4: conflict error must instruct the operator to run --resume.\n"
+        f"STDOUT:\n{out}\nSTDERR:\n{err}"
+    )
+
 
 # ---------------------------------------------------------------------------
 # 8. --resume after conflict
@@ -503,13 +510,13 @@ def test_merge_only_skips_rename(tmp_path: Path) -> None:
     rc, out, err = _run_update(repo, "--merge-only")
     assert rc == 0, f"--merge-only failed: {out}\n{err}"
 
-    # No sync: commit (rename engine skipped → no rename commit)
-    log = _git_out(repo, "log", "--oneline")
-    # merge-only should NOT produce a "sync:" commit (that's the rename step)
-    # It may produce a merge commit or just update branch refs
-    # Key: manifest should NOT exist (engine not run)
+    # The engine MUST NOT have run: no manifest file, and no "sync:" commit.
     manifest_path = repo / ".argo" / "sync-manifest.json"
-    # manifest is written by engine — merge-only should skip it
-    # (If it pre-existed, that's fine; but fresh repo shouldn't have it)
-    # The main thing: exit 0, no crash
-    assert True  # Exit 0 is sufficient for merge-only
+    assert not manifest_path.exists(), (
+        f"--merge-only must not write the rename manifest, but found {manifest_path}"
+    )
+    log = _git_out(repo, "log", "--oneline")
+    assert "sync: upstream" not in log, (
+        f"--merge-only must not produce a 'sync:' commit (rename engine should be skipped).\n"
+        f"Git log:\n{log}"
+    )
