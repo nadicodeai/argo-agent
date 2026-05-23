@@ -33,6 +33,8 @@ exceptions:
     why: "This file is the rename config itself — naming both sides of the mapping is necessary."
   - path: "bin/argo-bootstrap.py"
     why: "Bootstrap script references upstream relationship (upstream branch names, provenance comments) that must survive the rename pass."
+  - path: "tests/test_full_rename_config.py"
+    why: "This test validates the rename config by checking that hermes-* FROM keys are present in mappings. It must contain hermes-* string literals and cannot be renamed by the engine itself."
 
 skip_contexts:
   # Protect URLs that do NOT point to our own project repos/domains.

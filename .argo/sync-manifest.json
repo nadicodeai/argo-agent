@@ -1,10 +1,6 @@
 {
   "exceptions_used": [],
-  "files_touched": [
-    "argo_agent.egg-info/PKG-INFO",
-    "website/docs/developer-guide/plugin-llm-access.md",
-    "website/docs/user-guide/features/extending-the-dashboard.md"
-  ],
-  "ran_at": "2026-05-23T23:21:41.675619+00:00",
+  "files_touched": [],
+  "ran_at": "2026-05-23T23:29:15.340422+00:00",
   "upstream_sha": "874c2b1fe6ec185f9d1da17d31d2c7885d58c35c"
 }
