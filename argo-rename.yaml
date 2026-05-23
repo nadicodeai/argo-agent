@@ -1,0 +1,39 @@
+# argo-rename.yaml — declarative rename + exception config for argo-sync.
+#
+# Schema (filled out in M3 once explorer findings are turned into concrete mappings):
+#
+#   mappings:
+#     # Each entry rewrites the LEFT literal to the RIGHT literal across file
+#     # contents and (separately) filenames + directory names. Order matters:
+#     # longer keys are applied first to prevent partial-overlap clobbering.
+#     - {from: "HermesAgent",   to: "ArgoAgent"}
+#     - {from: "hermes-agent",  to: "argo-agent"}
+#     - {from: "hermes_agent",  to: "argo_agent"}
+#     - {from: "HERMES_",       to: "ARGO_"}
+#     - {from: "Hermes",        to: "Argo"}
+#     - {from: "HERMES",        to: "ARGO"}
+#     - {from: "hermes",        to: "argo"}
+#
+#   exceptions:
+#     # Path globs whose contents are left UNTOUCHED by the rename engine and
+#     # SKIPPED by `argo doctor --static`. Each entry requires a one-line
+#     # justification.
+#     - path: ".shepherd/**"
+#       why: "Orchestrator state — by definition documents upstream provenance during the build."
+#     - path: "argo-rename.yaml"
+#       why: "This file is the rename config itself — naming both sides of the mapping is necessary."
+#
+#   skip_contexts:
+#     # Per-file-content regex patterns where matches are NOT rewritten. Used to
+#     # avoid touching URLs, commit hashes, or opaque tokens that happen to
+#     # contain a mapping key.
+#     - 'https?://[^\s]*'        # Don't rewrite hermes strings inside URLs.
+#     - '\b[0-9a-f]{20,}\b'      # Don't rewrite inside hash-like tokens.
+
+mappings: []
+exceptions:
+  - path: ".shepherd/**"
+    why: "Orchestrator state — by definition documents upstream provenance during the build."
+  - path: "argo-rename.yaml"
+    why: "This file is the rename config itself — naming both sides of the mapping is necessary."
+skip_contexts: []

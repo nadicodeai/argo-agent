@@ -1,0 +1,40 @@
+#!/usr/bin/env python3
+"""argo-sync — rename + upstream-sync engine entry point.
+
+M1 scaffolding: argument parser only. Implementation lands in M2 (engine) and M4
+(orchestration with git operations). See .shepherd/plan.md for the full plan.
+
+Synopsis (target shape, not yet wired):
+
+    argo-sync                 # full sync: fetch upstream + merge + rename + commit
+    argo-sync --rename-only   # rename pass only, no git
+    argo-sync --merge-only    # merge upstream into main, no rename
+    argo-sync --resume        # resume after manual conflict resolution
+"""
+
+from __future__ import annotations
+
+import argparse
+import sys
+
+
+def build_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(
+        prog="argo-sync",
+        description="Sync argo-agent with upstream hermes-agent and re-apply the rename.",
+    )
+    p.add_argument("--rename-only", action="store_true", help="run only the rename pass (no git operations)")
+    p.add_argument("--merge-only", action="store_true", help="run only the upstream merge (no rename)")
+    p.add_argument("--resume", action="store_true", help="resume after manual conflict resolution")
+    return p
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = build_parser()
+    parser.parse_args(argv)
+    print("argo-sync: scaffolding (M1). Real implementation lands in M2 + M4.", file=sys.stderr)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
