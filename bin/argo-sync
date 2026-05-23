@@ -21,7 +21,7 @@ import sys
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="argo-sync",
-        description="Sync argo-agent with upstream hermes-agent and re-apply the rename.",
+        description="Sync argo-agent with the upstream remote and re-apply the rename.",
     )
     p.add_argument("--rename-only", action="store_true", help="run only the rename pass (no git operations)")
     p.add_argument("--merge-only", action="store_true", help="run only the upstream merge (no rename)")
