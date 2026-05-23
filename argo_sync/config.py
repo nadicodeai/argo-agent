@@ -3,7 +3,7 @@
 The YAML schema is::
 
     mappings:
-      - {from: "HermesAgent", to: "ArgoAgent"}
+      - {from: "OldLongName", to: "NewLongName"}
       - ...
     exceptions:
       - path: ".shepherd/**"
@@ -15,7 +15,8 @@ The YAML schema is::
 
 All fields are required at the top level (may be empty lists).
 Mappings are sorted longest-``from``-first after load so that longer tokens
-shadow shorter overlapping ones (e.g. ``HermesAgent`` before ``hermes``).
+shadow shorter overlapping ones (e.g. a 12-char key applies before a 6-char
+key that would otherwise overlap it).
 """
 
 from __future__ import annotations

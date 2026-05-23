@@ -44,17 +44,17 @@ def test_load_seed_config() -> None:
 def test_mappings_sorted_longest_first(tmp_path: Path) -> None:
     data = {
         "mappings": [
-            {"from": "hermes", "to": "argo"},
-            {"from": "HermesAgent", "to": "ArgoAgent"},
-            {"from": "hermes-agent", "to": "argo-agent"},
+            {"from": "short", "to": "S"},
+            {"from": "MiddleKey", "to": "MK"},
+            {"from": "longest-key", "to": "LK"},
         ],
         "exceptions": [],
         "skip_contexts": [],
     }
     cfg = RenameConfig.load(_write_yaml(tmp_path, data))
     froms = [m[0] for m in cfg.mappings]
-    # hermes-agent=12, HermesAgent=11, hermes=6 → longest first
-    assert froms == ["hermes-agent", "HermesAgent", "hermes"]
+    # longest-key=11, MiddleKey=9, short=5 → longest first
+    assert froms == ["longest-key", "MiddleKey", "short"]
 
 
 # ---------------------------------------------------------------------------
@@ -76,7 +76,7 @@ def test_malformed_yaml_raises_config_error(tmp_path: Path) -> None:
 
 def test_empty_from_raises_config_error(tmp_path: Path) -> None:
     data = {
-        "mappings": [{"from": "", "to": "argo"}],
+        "mappings": [{"from": "", "to": "anything"}],
         "exceptions": [],
         "skip_contexts": [],
     }
