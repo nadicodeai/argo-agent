@@ -50,7 +50,7 @@ After `nix profile install`, `argo`, `argo-agent`, and `argo-acp` are on your PA
 <summary><strong>Building from a local clone</strong></summary>
 
 ```bash
-git clone https://github.com/NousResearch/hermes-agent.git
+git clone https://github.com/NousResearch/argo-agent.git
 cd argo-agent
 nix build
 ./result/bin/argo setup

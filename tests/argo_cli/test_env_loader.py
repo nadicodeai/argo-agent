@@ -74,7 +74,7 @@ def test_main_import_applies_user_env_over_shell_values(tmp_path, monkeypatch):
     home = tmp_path / "argo"
     home.mkdir()
     (home / ".env").write_text(
-        "OPENAI_BASE_URL=https://new.example/v1\nHERMES_INFERENCE_PROVIDER=custom\n",
+        "OPENAI_BASE_URL=https://new.example/v1\nARGO_INFERENCE_PROVIDER=custom\n",
         encoding="utf-8",
     )
 

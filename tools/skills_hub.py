@@ -3100,7 +3100,7 @@ def check_for_skill_updates(
 # Argo centralized index source
 # ---------------------------------------------------------------------------
 
-ARGO_INDEX_URL = "https://hermes-agent.nousresearch.com/docs/api/skills-index.json"
+ARGO_INDEX_URL = "https://argo-agent.nousresearch.com/docs/api/skills-index.json"
 ARGO_INDEX_CACHE_FILE = INDEX_CACHE_DIR / "argo-index.json"
 ARGO_INDEX_TTL = 6 * 3600  # 6 hours
 

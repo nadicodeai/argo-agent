@@ -140,7 +140,7 @@ You no longer need to wrap `argo update` in `screen` or `tmux` to survive a term
 argo version
 ```
 
-Compare against the latest release at the [GitHub releases page](https://github.com/NousResearch/hermes-agent/releases).
+Compare against the latest release at the [GitHub releases page](https://github.com/NousResearch/argo-agent/releases).
 
 ### Updating from Messaging Platforms
 

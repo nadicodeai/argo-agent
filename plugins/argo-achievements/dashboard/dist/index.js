@@ -345,7 +345,7 @@
         tier_part: tierPart,
         name: achievement.name,
       });
-      return tmpl + "\n\n@NousResearch · https://hermes-agent.nousresearch.com";
+      return tmpl + "\n\n@NousResearch · https://argo-agent.nousresearch.com";
     }
 
     function shareOnX() {

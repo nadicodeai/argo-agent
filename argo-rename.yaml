@@ -8,6 +8,7 @@ mappings:
   # --- Composite identifiers (longest first) ---
   - {from: "hermes_tools_mcp_server", to: "argo_tools_mcp_server"}
   - {from: "HermesAgent",             to: "ArgoAgent"}
+  - {from: "Hermes-Agent",            to: "Argo-Agent"}
   - {from: "hermes-agent",            to: "argo-agent"}
   - {from: "hermes_agent",            to: "argo_agent"}
   - {from: "hermes_bootstrap",        to: "argo_bootstrap"}
@@ -34,6 +35,10 @@ exceptions:
     why: "Bootstrap script references upstream relationship (upstream branch names, provenance comments) that must survive the rename pass."
 
 skip_contexts:
-  - 'https?://[^\s]*'       # Don't rewrite hermes strings inside URLs.
+  # Protect URLs that do NOT point to our own project repos/domains.
+  # This lets us rename hermes-agent → argo-agent inside OUR project URLs
+  # (github.com/NousResearch/hermes-agent, hermes-agent.nousresearch.com,
+  # pypi.org/p/hermes-agent) while leaving third-party URLs intact.
+  - 'https?://(?!(?:(?:raw\.)?github(?:usercontent)?\.com/NousResearch/hermes(?:-agent|-example-plugins)|hermes-agent\.nousresearch\.com|hermes-agent\.local|pypi\.org/p/hermes-agent|img\.shields\.io/badge/Docs-hermes))[^\s]*'
   - '\b[0-9a-f]{40}\b'      # Don't rewrite inside git-sha-like 40-hex tokens.
   - '\b[0-9a-f]{64}\b'      # Don't rewrite inside sha256-like 64-hex tokens.

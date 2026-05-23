@@ -36,7 +36,7 @@ ARGO_API_PORT="${ARGO_API_PORT:-8642}"
 ARGO_API_HOST="${ARGO_API_HOST:-127.0.0.1}"
 ARGO_API_CONNECT_HOST="${ARGO_API_CONNECT_HOST:-127.0.0.1}"
 ARGO_API_MODEL_NAME="${ARGO_API_MODEL_NAME:-Argo Agent}"
-ARGO_API_BASE_URL="http://${HERMES_API_CONNECT_HOST}:${HERMES_API_PORT}/v1"
+ARGO_API_BASE_URL="http://${ARGO_API_CONNECT_HOST}:${ARGO_API_PORT}/v1"
 LAUNCHER_PATH="$HOME/.local/bin/start-open-webui-argo.sh"
 LOG_DIR="$HOME/.argo/logs"
 
@@ -310,12 +310,12 @@ main() {
   log 'Restarting Argo gateway so API server settings take effect...'
   argo gateway restart >/dev/null 2>&1 || true
   sleep 4
-  if ! curl -fsS "http://${HERMES_API_CONNECT_HOST}:${HERMES_API_PORT}/health" >/dev/null; then
+  if ! curl -fsS "http://${ARGO_API_CONNECT_HOST}:${ARGO_API_PORT}/health" >/dev/null; then
     log 'Argo API server did not answer on the first check. Trying to start gateway in the background...'
     nohup argo gateway run >/dev/null 2>&1 &
     sleep 6
   fi
-  curl -fsS "http://${HERMES_API_CONNECT_HOST}:${HERMES_API_PORT}/health" >/dev/null
+  curl -fsS "http://${ARGO_API_CONNECT_HOST}:${ARGO_API_PORT}/health" >/dev/null
 
   log 'Installing Open WebUI into a dedicated virtualenv...'
   install_open_webui
