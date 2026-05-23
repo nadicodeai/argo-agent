@@ -128,11 +128,11 @@ def _check_is_argo_repo(repo_root: Path) -> None:
         )
 
 
-def _check_on_main(repo_root: Path) -> None:  # noqa: ARG001
+def _check_on_main(repo_root: Path, allowed_branch: str = "main") -> None:  # noqa: ARG001
     branch = _current_branch()
-    if branch != "main":
+    if branch != allowed_branch:
         raise BootstrapError(
-            f"Must run on branch 'main', currently on '{branch}'",
+            f"Must run on branch '{allowed_branch}', currently on '{branch}'",
             step="preconditions",
         )
 
@@ -266,6 +266,12 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Local branch that tracks upstream/main (default: upstream-mirror).",
     )
     p.add_argument(
+        "--target-branch",
+        default="main",
+        metavar="BRANCH",
+        help="Branch bootstrap must run on (default: main). Override for worktrees.",
+    )
+    p.add_argument(
         "--dry-run",
         action="store_true",
         help="Print precondition results and collision targets; do not modify the tree.",
@@ -276,6 +282,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 def main(argv: list[str] | None = None) -> None:  # noqa: C901
     args = _parse_args(argv)
     upstream_branch: str = args.upstream_branch
+    target_branch: str = args.target_branch
     dry_run: bool = args.dry_run
 
     repo_root = _REPO_ROOT
@@ -287,7 +294,7 @@ def main(argv: list[str] | None = None) -> None:  # noqa: C901
     print("Step 1: Checking preconditions …")
     try:
         _check_is_argo_repo(repo_root)
-        _check_on_main(repo_root)
+        _check_on_main(repo_root, allowed_branch=target_branch)
         _check_clean_tree()
         _check_upstream_branch(upstream_branch)
     except BootstrapError as exc:
