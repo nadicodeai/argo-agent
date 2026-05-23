@@ -51,11 +51,7 @@ from pathlib import Path
 
 from argo_sync.config import RenameConfig
 from argo_sync.errors import RenameConflictError
-
-# Directory names whose subtrees are always excluded.
-_ALWAYS_SKIP: frozenset[str] = frozenset(
-    {".git", ".venv", ".argo", "__pycache__", "node_modules"}
-)
+from argo_sync.passes._constants import SKIP_DIRS as _ALWAYS_SKIP, apply_mappings
 
 
 class FilenamePass:
@@ -138,7 +134,7 @@ class FilenamePass:
                     continue
 
                 # Apply mappings to the basename only.
-                new_name = _apply_mappings(filename, self.config.mappings)
+                new_name = apply_mappings(filename, self.config.mappings)
                 if new_name == filename:
                     # No mapping fired — leave the file alone.
                     continue
@@ -158,34 +154,3 @@ class FilenamePass:
 
         return renamed
 
-
-# ---------------------------------------------------------------------------
-# Internal helpers
-# ---------------------------------------------------------------------------
-
-
-def _apply_mappings(name: str, mappings: tuple[tuple[str, str], ...]) -> str:
-    """Apply *mappings* in order to *name*, returning the transformed string.
-
-    Mappings are expected to be sorted longest-``from``-first.  Each mapping is
-    applied with :meth:`str.replace`, which replaces all non-overlapping
-    occurrences left-to-right in a single pass.  Because longer keys are applied
-    first, a shorter key that overlaps with an already-replaced region will find
-    no literal match and will naturally be a no-op for that region.
-
-    Parameters
-    ----------
-    name:
-        The filename (basename only) to transform.
-    mappings:
-        Ordered sequence of ``(from_key, to_value)`` pairs.
-
-    Returns
-    -------
-    str
-        The transformed name (may equal *name* if no mapping matched).
-    """
-    result = name
-    for from_key, to_value in mappings:
-        result = result.replace(from_key, to_value)
-    return result

@@ -263,3 +263,42 @@ def test_symlink_to_dir_is_skipped(tmp_path: Path) -> None:
     # Only the real dir appears in the result.
     assert tmp_path / "real_new" in result
     assert link not in result
+
+
+# ---------------------------------------------------------------------------
+# Test 11 — Directories NESTED inside skip dirs are NOT renamed
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "skip_parent",
+    [".git", ".venv", ".argo", "__pycache__", "node_modules"],
+)
+def test_nested_inside_skip_dir_not_renamed(
+    tmp_path: Path, skip_parent: str
+) -> None:
+    """A directory nested inside a skip dir must never be renamed.
+
+    E.g. .git/foo_pkg/ with mapping foo→bar must remain .git/foo_pkg/.
+    The hard-skip check in the current implementation only fires on the
+    *basename* of the candidate directory, so .git itself is skipped but
+    .git/foo_pkg/ is not — its basename is "foo_pkg", which is not in
+    _HARD_SKIP_DIRS.  The fix is to also skip any directory whose ancestor
+    chain contains a skip dir.
+
+    This test FAILS before the fix and PASSES after it.
+    """
+    # Build: <tmp>/<skip_parent>/foo_pkg/
+    nested = tmp_path / skip_parent / "foo_pkg"
+    nested.mkdir(parents=True)
+
+    cfg = make_config([("foo", "bar")])
+    DirectoryPass(cfg).run(tmp_path)
+
+    # The nested directory must be unchanged.
+    assert nested.exists(), (
+        f"{skip_parent}/foo_pkg/ was renamed despite being inside a skip dir"
+    )
+    assert not (tmp_path / skip_parent / "bar_pkg").exists(), (
+        f"{skip_parent}/bar_pkg/ was created — DirectoryPass descended into {skip_parent!r}"
+    )
