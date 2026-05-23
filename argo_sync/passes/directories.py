@@ -4,11 +4,12 @@ Walk the source tree **bottom-up** (deepest directories first) so that renaming
 a child never invalidates a queued parent path.  For each directory whose
 basename contains a mapping ``from`` key:
 
-1. Skip if the repo-relative path matches any exception glob
+1. Skip if any component of the repo-relative path is in
+   :data:`~argo_sync.passes._constants.SKIP_DIRS` — this prunes the directory
+   itself *and* all descendants of skip dirs (e.g. ``.git/foo/`` is not
+   renamed even though ``foo`` is not in the skip set).
+2. Skip if the repo-relative path matches any exception glob
    (:meth:`~argo_sync.config.RenameConfig.matches_exception`).
-2. Skip if the directory name is in :data:`_HARD_SKIP_DIRS` (these names are
-   never renamed regardless of mappings: ``.git``, ``.venv``, ``.argo``,
-   ``__pycache__``, ``node_modules``).
 3. Skip symlinks — renaming a symlink rather than its target would silently
    alter the link's meaning.  Real target directories are handled via their
    own traversal entries.
@@ -31,16 +32,7 @@ from pathlib import Path
 
 from argo_sync.config import RenameConfig
 from argo_sync.errors import RenameConflictError
-
-# ---------------------------------------------------------------------------
-# Constants
-# ---------------------------------------------------------------------------
-
-#: Directory names that are **never** renamed regardless of mappings.
-#: These are tool-internal directories whose names must remain stable.
-_HARD_SKIP_DIRS: frozenset[str] = frozenset(
-    {".git", ".venv", ".argo", "__pycache__", "node_modules"}
-)
+from argo_sync.passes._constants import SKIP_DIRS, apply_mappings as _apply_mappings
 
 
 # ---------------------------------------------------------------------------
@@ -90,18 +82,21 @@ class DirectoryPass:
         for directory in all_dirs:
             basename = directory.name
 
-            # --- Hard-coded skip set ---
-            if basename in _HARD_SKIP_DIRS:
-                continue
-
-            # --- Exception glob check ---
+            # --- Exception glob check (needs repo-relative path) ---
             try:
-                rel = directory.relative_to(root).as_posix()
+                rel = directory.relative_to(root)
             except ValueError:
                 # Should not happen for descendants, but guard anyway.
                 continue
 
-            if self.config.matches_exception(rel):
+            # --- Ancestor-based skip: skip this dir and ALL its descendants
+            #     when any component of the repo-relative path is in SKIP_DIRS.
+            #     This prevents renaming e.g. .git/foo_pkg/ when mapping foo→bar.
+            if any(part in SKIP_DIRS for part in rel.parts):
+                continue
+
+            rel_posix = rel.as_posix()
+            if self.config.matches_exception(rel_posix):
                 continue
 
             # --- Check whether any mapping applies ---
@@ -120,34 +115,3 @@ class DirectoryPass:
             renamed.append(target)
 
         return renamed
-
-
-# ---------------------------------------------------------------------------
-# Internal helpers
-# ---------------------------------------------------------------------------
-
-
-def _apply_mappings(name: str, mappings: tuple[tuple[str, str], ...]) -> str:
-    """Apply mappings in order (longest-first) and return the result.
-
-    Each mapping is a ``(from, to)`` pair.  Mappings are applied sequentially:
-    the output of one mapping is the input to the next.  Because mappings are
-    sorted longest-``from``-first by :class:`~argo_sync.config.RenameConfig`,
-    longer tokens shadow shorter overlapping ones when applied.
-
-    Parameters
-    ----------
-    name:
-        The directory basename to transform.
-    mappings:
-        Ordered sequence of ``(from_str, to_str)`` pairs, longest-first.
-
-    Returns
-    -------
-    str
-        Transformed name.  Equal to *name* if no mapping matched.
-    """
-    result = name
-    for from_str, to_str in mappings:
-        result = result.replace(from_str, to_str)
-    return result
