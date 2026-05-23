@@ -1,39 +1,39 @@
 # argo-rename.yaml — declarative rename + exception config for argo-sync.
 #
-# Schema (filled out in M3 once explorer findings are turned into concrete mappings):
-#
-#   mappings:
-#     # Each entry rewrites the LEFT literal to the RIGHT literal across file
-#     # contents and (separately) filenames + directory names. Order matters:
-#     # longer keys are applied first to prevent partial-overlap clobbering.
-#     - {from: "HermesAgent",   to: "ArgoAgent"}
-#     - {from: "hermes-agent",  to: "argo-agent"}
-#     - {from: "hermes_agent",  to: "argo_agent"}
-#     - {from: "HERMES_",       to: "ARGO_"}
-#     - {from: "Hermes",        to: "Argo"}
-#     - {from: "HERMES",        to: "ARGO"}
-#     - {from: "hermes",        to: "argo"}
-#
-#   exceptions:
-#     # Path globs whose contents are left UNTOUCHED by the rename engine and
-#     # SKIPPED by `argo doctor --static`. Each entry requires a one-line
-#     # justification.
-#     - path: ".shepherd/**"
-#       why: "Orchestrator state — by definition documents upstream provenance during the build."
-#     - path: "argo-rename.yaml"
-#       why: "This file is the rename config itself — naming both sides of the mapping is necessary."
-#
-#   skip_contexts:
-#     # Per-file-content regex patterns where matches are NOT rewritten. Used to
-#     # avoid touching URLs, commit hashes, or opaque tokens that happen to
-#     # contain a mapping key.
-#     - 'https?://[^\s]*'        # Don't rewrite hermes strings inside URLs.
-#     - '\b[0-9a-f]{20,}\b'      # Don't rewrite inside hash-like tokens.
+# Mappings are applied longest-from-first so that longer tokens shadow
+# shorter overlapping ones (e.g. "hermes_agent" is handled before "hermes").
+# The engine also re-sorts on load, so the order here is for human review.
 
-mappings: []
+mappings:
+  # --- Composite identifiers (longest first) ---
+  - {from: "hermes_tools_mcp_server", to: "argo_tools_mcp_server"}
+  - {from: "HermesAgent",             to: "ArgoAgent"}
+  - {from: "hermes-agent",            to: "argo-agent"}
+  - {from: "hermes_agent",            to: "argo_agent"}
+  - {from: "hermes_bootstrap",        to: "argo_bootstrap"}
+  - {from: "hermes_constants",        to: "argo_constants"}
+  - {from: "hermes_logging",          to: "argo_logging"}
+  - {from: "hermes_state",            to: "argo_state"}
+  - {from: "hermes_time",             to: "argo_time"}
+  - {from: "hermes_cli",              to: "argo_cli"}
+  - {from: "HERMES_HOME",             to: "ARGO_HOME"}
+  - {from: "HERMES_",                 to: "ARGO_"}
+  - {from: "~/.hermes",              to: "~/.argo"}
+  - {from: ".hermes/",               to: ".argo/"}
+  # --- Bare case variants (shortest, last) ---
+  - {from: "Hermes",                  to: "Argo"}
+  - {from: "HERMES",                  to: "ARGO"}
+  - {from: "hermes",                  to: "argo"}
+
 exceptions:
   - path: ".shepherd/**"
     why: "Orchestrator state — by definition documents upstream provenance during the build."
   - path: "argo-rename.yaml"
     why: "This file is the rename config itself — naming both sides of the mapping is necessary."
-skip_contexts: []
+  - path: "bin/argo-bootstrap.py"
+    why: "Bootstrap script references upstream relationship (upstream branch names, provenance comments) that must survive the rename pass."
+
+skip_contexts:
+  - 'https?://[^\s]*'       # Don't rewrite hermes strings inside URLs.
+  - '\b[0-9a-f]{40}\b'      # Don't rewrite inside git-sha-like 40-hex tokens.
+  - '\b[0-9a-f]{64}\b'      # Don't rewrite inside sha256-like 64-hex tokens.

@@ -45,6 +45,22 @@ class RenameConflictError(ArgoSyncError):
         self.target = target
 
 
+class BootstrapError(ArgoSyncError):
+    """Raised when a precondition for the initial bootstrap fails or when the
+    bootstrap process cannot complete safely.
+
+    Attributes
+    ----------
+    step:
+        Short label for the stage at which the error occurred (e.g.
+        ``"preconditions"``, ``"merge"``, ``"rename"``).
+    """
+
+    def __init__(self, message: str, *, step: str = "bootstrap") -> None:
+        super().__init__(f"[{step}] {message}")
+        self.step = step
+
+
 class UpstreamMergeConflict(ArgoSyncError):
     """Raised when a git merge conflict is encountered during upstream sync.
 

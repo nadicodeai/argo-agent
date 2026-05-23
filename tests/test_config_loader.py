@@ -31,9 +31,12 @@ def _write_yaml(tmp_path: Path, data: object, filename: str = "rename.yaml") -> 
 
 def test_load_seed_config() -> None:
     cfg = RenameConfig.load(SEED_CONFIG)
-    assert cfg.mappings == ()
-    assert len(cfg.exceptions) == 2
-    assert cfg.skip_contexts == ()
+    # T3.1 populated mappings: expect at least the 17 required entries.
+    assert len(cfg.mappings) >= 17
+    # Three exceptions: .shepherd/**, argo-rename.yaml, bin/argo-bootstrap.py
+    assert len(cfg.exceptions) == 3
+    # Three skip_context patterns (URL, sha40, sha64)
+    assert len(cfg.skip_contexts) == 3
 
 
 # ---------------------------------------------------------------------------
