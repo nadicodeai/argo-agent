@@ -1,0 +1,24 @@
+# argo-rename.yaml — fixture config for synthetic rename engine tests.
+#
+# Mappings are ordered longest-from-first within logical groups so that
+# more-specific tokens shadow shorter overlapping ones.
+# The config loader also sorts them, but we list them in priority order
+# for documentation clarity.
+
+mappings:
+  # Composite identifier (longest match first)
+  - {from: "UpstreamthingCli", to: "ArgoCli"}
+  - {from: "upstreamthing-agent", to: "argo-agent"}
+  # Package / module names (underscore-joined)
+  - {from: "upstreamthing_cli", to: "argo_cli"}
+  - {from: "upstreamthing_state", to: "argo_state"}
+  # Environment-variable prefix (ALL_CAPS underscore-suffix)
+  - {from: "UPSTREAMTHING_HOME", to: "ARGO_HOME"}
+  - {from: "UPSTREAMTHING_", to: "ARGO_"}
+  # Title-case base token
+  - {from: "Upstreamthing", to: "Argo"}
+  # Lower-case base token (broadest, applied last)
+  - {from: "upstreamthing", to: "argo"}
+
+exceptions: []
+skip_contexts: []
