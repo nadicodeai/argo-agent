@@ -1,0 +1,11 @@
+[project]
+name = "upstreamthing-agent"
+version = "0.1.0"
+description = "Upstreamthing agent — synthetic fixture for rename engine tests"
+
+[project.scripts]
+upstreamthing = "upstreamthing_cli.main:x"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["upstreamthing_*"]
