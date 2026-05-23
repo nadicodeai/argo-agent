@@ -75,3 +75,6 @@ models-dev-upstream/
 argo_cli/tui_dist/*
 argo_cli/scripts/
 docs/superpowers/*
+
+# Smoke-run logs written by tests/test_deployment_smoke.py
+.shepherd/smoke-run-*.log
