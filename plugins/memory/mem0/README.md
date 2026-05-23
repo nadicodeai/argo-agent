@@ -10,23 +10,23 @@ Server-side LLM fact extraction with semantic search, reranking, and automatic d
 ## Setup
 
 ```bash
-hermes memory setup    # select "mem0"
+argo memory setup    # select "mem0"
 ```
 
 Or manually:
 ```bash
-hermes config set memory.provider mem0
-echo "MEM0_API_KEY=your-key" >> ~/.hermes/.env
+argo config set memory.provider mem0
+echo "MEM0_API_KEY=your-key" >> ~/.argo/.env
 ```
 
 ## Config
 
-Config file: `$HERMES_HOME/mem0.json`
+Config file: `$ARGO_HOME/mem0.json`
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `user_id` | `hermes-user` | User identifier on Mem0 |
-| `agent_id` | `hermes` | Agent identifier |
+| `user_id` | `argo-user` | User identifier on Mem0 |
+| `agent_id` | `argo` | Agent identifier |
 | `rerank` | `true` | Enable reranking for recall |
 
 ## Tools

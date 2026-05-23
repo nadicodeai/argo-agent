@@ -1,1 +1,1 @@
-# Hermes plugins package
+# Argo plugins package

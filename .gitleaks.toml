@@ -1,0 +1,18 @@
+[extend]
+useDefault = true
+# Also pull in user-global extra rules (e.g. stripe-webhook, supabase, modal)
+extendPaths = ["~/.config/gitleaks.toml"]
+
+# ---------------------------------------------------------------------------
+# Allowlisted false positives from the upstream codebase
+# ---------------------------------------------------------------------------
+
+[[allowlists]]
+description = "Test fixture fake DeepSeek API key in credential pool test"
+regexes = ['''sk-dotenv-resolve-789''']
+paths = ['''tests/tools/test_credential_pool_env_fallback\.py''']
+
+[[allowlists]]
+description = "Placeholder secret in Open WebUI documentation curl example"
+regexes = ['''your-secret-key''']
+paths = ['''website/docs/user-guide/messaging/open-webui\.md''']

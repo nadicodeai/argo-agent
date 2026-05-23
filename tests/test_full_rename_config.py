@@ -55,23 +55,23 @@ def test_required_identifiers_present(config: RenameConfig) -> None:
     """All required 'from' identifiers must be in the mappings."""
     from_keys = {from_ for from_, _ in config.mappings}
     required = {
-        "HermesAgent",
-        "hermes-agent",
-        "hermes_agent",
-        "hermes_cli",
-        "hermes_bootstrap",
-        "hermes_constants",
-        "hermes_state",
-        "hermes_time",
-        "hermes_logging",
-        "hermes_tools_mcp_server",
-        "HERMES_HOME",
-        "HERMES_",
-        "~/.hermes",
-        ".hermes/",
-        "Hermes",
-        "HERMES",
-        "hermes",
+        "ArgoAgent",
+        "argo-agent",
+        "argo_agent",
+        "argo_cli",
+        "argo_bootstrap",
+        "argo_constants",
+        "argo_state",
+        "argo_time",
+        "argo_logging",
+        "argo_tools_mcp_server",
+        "ARGO_HOME",
+        "ARGO_",
+        "~/.argo",
+        ".argo/",
+        "Argo",
+        "ARGO",
+        "argo",
     }
     missing = required - from_keys
     assert not missing, f"Missing required 'from' keys: {sorted(missing)}"
@@ -81,15 +81,15 @@ def test_required_to_values_correct(config: RenameConfig) -> None:
     """Key mappings must have the correct 'to' values."""
     mapping_dict = dict(config.mappings)
     expected = {
-        "HermesAgent": "ArgoAgent",
-        "hermes-agent": "argo-agent",
-        "hermes_agent": "argo_agent",
-        "hermes_cli": "argo_cli",
-        "HERMES_HOME": "ARGO_HOME",
-        "HERMES_": "ARGO_",
-        "Hermes": "Argo",
-        "HERMES": "ARGO",
-        "hermes": "argo",
+        "ArgoAgent": "ArgoAgent",
+        "argo-agent": "argo-agent",
+        "argo_agent": "argo_agent",
+        "argo_cli": "argo_cli",
+        "ARGO_HOME": "ARGO_HOME",
+        "ARGO_": "ARGO_",
+        "Argo": "Argo",
+        "ARGO": "ARGO",
+        "argo": "argo",
     }
     for from_, to_ in expected.items():
         assert mapping_dict.get(from_) == to_, (
@@ -131,19 +131,19 @@ def test_skip_contexts_non_empty(config: RenameConfig) -> None:
     assert url_patterns, "No URL-matching skip_context found"
 
 
-def test_longer_hermes_agent_before_shorter_hermes(config: RenameConfig) -> None:
-    """'hermes_agent' must appear before 'hermes' in the sorted mapping list."""
+def test_longer_argo_agent_before_shorter_argo(config: RenameConfig) -> None:
+    """'argo_agent' must appear before 'argo' in the sorted mapping list."""
     froms = [f for f, _ in config.mappings]
-    assert "hermes_agent" in froms, "hermes_agent not in mappings"
-    assert "hermes" in froms, "hermes not in mappings"
-    assert froms.index("hermes_agent") < froms.index("hermes"), (
-        "hermes_agent must come before hermes in the sorted order"
+    assert "argo_agent" in froms, "argo_agent not in mappings"
+    assert "argo" in froms, "argo not in mappings"
+    assert froms.index("argo_agent") < froms.index("argo"), (
+        "argo_agent must come before argo in the sorted order"
     )
 
 
-def test_hermes_home_before_hermes_bare(config: RenameConfig) -> None:
-    """'HERMES_HOME' must appear before bare 'HERMES' entry."""
+def test_argo_home_before_argo_bare(config: RenameConfig) -> None:
+    """'ARGO_HOME' must appear before bare 'ARGO' entry."""
     froms = [f for f, _ in config.mappings]
-    assert froms.index("HERMES_HOME") < froms.index("HERMES"), (
-        "HERMES_HOME must come before HERMES in sorted order"
+    assert froms.index("ARGO_HOME") < froms.index("ARGO"), (
+        "ARGO_HOME must come before ARGO in sorted order"
     )

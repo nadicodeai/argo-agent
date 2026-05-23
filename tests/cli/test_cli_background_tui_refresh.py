@@ -10,12 +10,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from cli import HermesCLI
+from cli import ArgoCLI
 
 
 def _make_cli():
-    """Create a minimal HermesCLI instance for testing."""
-    cli_obj = HermesCLI.__new__(HermesCLI)
+    """Create a minimal ArgoCLI instance for testing."""
+    cli_obj = ArgoCLI.__new__(ArgoCLI)
     cli_obj.model = "test-model"
     cli_obj._background_tasks = {}
     cli_obj._background_task_counter = 0

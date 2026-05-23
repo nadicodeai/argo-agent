@@ -137,8 +137,8 @@ export interface Translations {
     starting: string;
     startedInBackground: string;
     stopped: string;
-    updateHermes: string;
-    updatingHermes: string;
+    updateArgo: string;
+    updatingArgo: string;
     waitingForOutput: string;
   };
 
@@ -453,7 +453,7 @@ export interface Translations {
     switchTheme: string;
   };
 
-  // ── Achievements plugin (plugins/hermes-achievements) ──
+  // ── Achievements plugin (plugins/argo-achievements) ──
   achievements: {
     hero: {
       kicker: string;

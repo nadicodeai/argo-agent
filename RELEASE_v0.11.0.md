@@ -1,4 +1,4 @@
-# Hermes Agent v0.11.0 (v2026.4.23)
+# Argo Agent v0.11.0 (v2026.4.23)
 
 **Release Date:** April 23, 2026
 **Since v0.9.0:** 1,556 commits · 761 merged PRs · 1,314 files changed · 224,174 insertions · 29 community contributors (290 including co-authors)
@@ -11,7 +11,7 @@ This release also folds in all the highlights deferred from v0.10.0 (which shipp
 
 ## ✨ Highlights
 
-- **New Ink-based TUI** — `hermes --tui` is now a full React/Ink rewrite of the interactive CLI, with a Python JSON-RPC backend (`tui_gateway`). Sticky composer, live streaming with OSC-52 clipboard support, stable picker keys, status bar with per-turn stopwatch and git branch, `/clear` confirm, light-theme preset, and a subagent spawn observability overlay. ~310 commits to `ui-tui/` + `tui_gateway/`. (@OutThisLife + Teknium)
+- **New Ink-based TUI** — `argo --tui` is now a full React/Ink rewrite of the interactive CLI, with a Python JSON-RPC backend (`tui_gateway`). Sticky composer, live streaming with OSC-52 clipboard support, stable picker keys, status bar with per-turn stopwatch and git branch, `/clear` confirm, light-theme preset, and a subagent spawn observability overlay. ~310 commits to `ui-tui/` + `tui_gateway/`. (@OutThisLife + Teknium)
 
 - **Transport ABC + Native AWS Bedrock** — Format conversion and HTTP transport were extracted from `run_agent.py` into a pluggable `agent/transports/` layer. `AnthropicTransport`, `ChatCompletionsTransport`, `ResponsesApiTransport`, and `BedrockTransport` each own their own format conversion and API shape. Native AWS Bedrock support via the Converse API ships on top of the new abstraction. ([#10549](https://github.com/NousResearch/hermes-agent/pull/10549), [#13347](https://github.com/NousResearch/hermes-agent/pull/13347), [#13366](https://github.com/NousResearch/hermes-agent/pull/13366), [#13430](https://github.com/NousResearch/hermes-agent/pull/13430), [#13805](https://github.com/NousResearch/hermes-agent/pull/13805), [#13814](https://github.com/NousResearch/hermes-agent/pull/13814) — @kshitijk4poor + Teknium)
 
@@ -25,13 +25,13 @@ This release also folds in all the highlights deferred from v0.10.0 (which shipp
 
 - **`/steer` — mid-run agent nudges** — `/steer <prompt>` injects a note that the running agent sees after its next tool call, without interrupting the turn or breaking prompt cache. For when you want to course-correct an agent in-flight. ([#12116](https://github.com/NousResearch/hermes-agent/pull/12116))
 
-- **Shell hooks** — Wire any shell script as a Hermes lifecycle hook (pre_tool_call, post_tool_call, on_session_start, etc.) without writing a Python plugin. ([#13296](https://github.com/NousResearch/hermes-agent/pull/13296))
+- **Shell hooks** — Wire any shell script as a Argo lifecycle hook (pre_tool_call, post_tool_call, on_session_start, etc.) without writing a Python plugin. ([#13296](https://github.com/NousResearch/hermes-agent/pull/13296))
 
 - **Webhook direct-delivery mode** — Webhook subscriptions can now forward payloads straight to a platform chat without going through the agent — zero-LLM push notifications for alerting, uptime checks, and event streams. ([#12473](https://github.com/NousResearch/hermes-agent/pull/12473))
 
 - **Smarter delegation** — Subagents now have an explicit `orchestrator` role that can spawn their own workers, with configurable `max_spawn_depth` (default flat). Concurrent sibling subagents share filesystem state through a file-coordination layer so they don't clobber each other's edits. ([#13691](https://github.com/NousResearch/hermes-agent/pull/13691), [#13718](https://github.com/NousResearch/hermes-agent/pull/13718))
 
-- **Auxiliary models — configurable UI + main-model-first** — `hermes model` has a dedicated "Configure auxiliary models" screen for per-task overrides (compression, vision, session_search, title_generation). `auto` routing now defaults to the main model for side tasks across all users (previously aggregator users were silently routed to a cheap provider-side default). ([#11891](https://github.com/NousResearch/hermes-agent/pull/11891), [#11900](https://github.com/NousResearch/hermes-agent/pull/11900))
+- **Auxiliary models — configurable UI + main-model-first** — `argo model` has a dedicated "Configure auxiliary models" screen for per-task overrides (compression, vision, session_search, title_generation). `auto` routing now defaults to the main model for side tasks across all users (previously aggregator users were silently routed to a cheap provider-side default). ([#11891](https://github.com/NousResearch/hermes-agent/pull/11891), [#11900](https://github.com/NousResearch/hermes-agent/pull/11900))
 
 - **Dashboard plugin system + live theme switching** — The web dashboard is now extensible. Third-party plugins can add custom tabs, widgets, and views without forking. Paired with a live-switching theme system — themes now control colors, fonts, layout, and density — so users can hot-swap the dashboard look without a reload. Same theming discipline the CLI has, now on the web. ([#10951](https://github.com/NousResearch/hermes-agent/pull/10951), [#10687](https://github.com/NousResearch/hermes-agent/pull/10687), [#14725](https://github.com/NousResearch/hermes-agent/pull/14725))
 
@@ -113,7 +113,7 @@ This release also folds in all the highlights deferred from v0.10.0 (which shipp
 - **Honcho overhaul** — context injection, 5-tool surface, cost safety, session isolation ([#10619](https://github.com/NousResearch/hermes-agent/pull/10619))
 - **Hindsight richer session-scoped retain metadata** (salvage of #6290) ([#13987](https://github.com/NousResearch/hermes-agent/pull/13987))
 - Fix: deduplicate memory provider tools to prevent 400 on strict providers ([#10511](https://github.com/NousResearch/hermes-agent/pull/10511))
-- Fix: discover user-installed memory providers from `$HERMES_HOME/plugins/` ([#10529](https://github.com/NousResearch/hermes-agent/pull/10529))
+- Fix: discover user-installed memory providers from `$ARGO_HOME/plugins/` ([#10529](https://github.com/NousResearch/hermes-agent/pull/10529))
 - Fix: add `on_memory_write` bridge to sequential tool execution path ([#10507](https://github.com/NousResearch/hermes-agent/pull/10507))
 - Fix: preserve `session_id` across `previous_response_id` chains in `/v1/responses` ([#10059](https://github.com/NousResearch/hermes-agent/pull/10059))
 
@@ -121,7 +121,7 @@ This release also folds in all the highlights deferred from v0.10.0 (which shipp
 
 ## 🖥️ New Ink-based TUI
 
-A full React/Ink rewrite of the interactive CLI — invoked via `hermes --tui` or `HERMES_TUI=1`. Shipped across ~310 commits to `ui-tui/` and `tui_gateway/`.
+A full React/Ink rewrite of the interactive CLI — invoked via `argo --tui` or `ARGO_TUI=1`. Shipped across ~310 commits to `ui-tui/` and `tui_gateway/`.
 
 ### TUI Foundations
 - New TUI based on Ink + Python JSON-RPC backend
@@ -244,7 +244,7 @@ A full React/Ink rewrite of the interactive CLI — invoked via `hermes --tui` o
 - **Project/strict execution modes** (default: project) ([#11971](https://github.com/NousResearch/hermes-agent/pull/11971))
 
 ### Image Generation
-- **Multi-model FAL support** with picker in `hermes tools` ([#11265](https://github.com/NousResearch/hermes-agent/pull/11265))
+- **Multi-model FAL support** with picker in `argo tools` ([#11265](https://github.com/NousResearch/hermes-agent/pull/11265))
 - **Recraft V3 → V4 Pro, Nano Banana → Pro upgrades** ([#11406](https://github.com/NousResearch/hermes-agent/pull/11406))
 - **GPT Image 2** in FAL catalog ([#13677](https://github.com/NousResearch/hermes-agent/pull/13677))
 - **xAI image generation provider** (grok-imagine-image) ([#14765](https://github.com/NousResearch/hermes-agent/pull/14765))
@@ -286,7 +286,7 @@ A full React/Ink rewrite of the interactive CLI — invoked via `hermes --tui` o
 
 ### Skill System
 - **Namespaced skill registration** for plugin bundles ([#9786](https://github.com/NousResearch/hermes-agent/pull/9786))
-- **`hermes skills reset`** to un-stick bundled skills ([#11468](https://github.com/NousResearch/hermes-agent/pull/11468))
+- **`argo skills reset`** to un-stick bundled skills ([#11468](https://github.com/NousResearch/hermes-agent/pull/11468))
 - **Skills guard opt-in** — `config.skills.guard_agent_created` (default off) ([#14557](https://github.com/NousResearch/hermes-agent/pull/14557))
 - **Bundled skill scripts runnable out of the box** ([#13384](https://github.com/NousResearch/hermes-agent/pull/13384))
 - **`xitter` replaced with `xurl`** — the official X API CLI ([#12303](https://github.com/NousResearch/hermes-agent/pull/12303))
@@ -332,10 +332,10 @@ A full React/Ink rewrite of the interactive CLI — invoked via `hermes --tui` o
 - **Markdown stripping, compact multiline previews, external editor** ([#12934](https://github.com/NousResearch/hermes-agent/pull/12934))
 - **`--ignore-user-config` and `--ignore-rules` flags** (port codex#18646) ([#14277](https://github.com/NousResearch/hermes-agent/pull/14277))
 - **Account limits section in `/usage`** ([#13428](https://github.com/NousResearch/hermes-agent/pull/13428))
-- **Doctor: Command Installation check** for `hermes` bin symlink ([#10112](https://github.com/NousResearch/hermes-agent/pull/10112))
+- **Doctor: Command Installation check** for `argo` bin symlink ([#10112](https://github.com/NousResearch/hermes-agent/pull/10112))
 - **ESC cancels secret/sudo prompts**, clearer skip messaging ([#9902](https://github.com/NousResearch/hermes-agent/pull/9902))
-- Fix: agent-facing text uses `display_hermes_home()` instead of hardcoded `~/.hermes` ([#10285](https://github.com/NousResearch/hermes-agent/pull/10285))
-- Fix: enforce `config.yaml` as sole CWD source + deprecate `.env` CWD vars + add `hermes memory reset` ([#11029](https://github.com/NousResearch/hermes-agent/pull/11029))
+- Fix: agent-facing text uses `display_argo_home()` instead of hardcoded `~/.argo` ([#10285](https://github.com/NousResearch/hermes-agent/pull/10285))
+- Fix: enforce `config.yaml` as sole CWD source + deprecate `.env` CWD vars + add `argo memory reset` ([#11029](https://github.com/NousResearch/hermes-agent/pull/11029))
 
 ---
 
@@ -345,7 +345,7 @@ A full React/Ink rewrite of the interactive CLI — invoked via `hermes --tui` o
 - **Block agent from self-destructing the gateway** via terminal (closes #6666) ([#9895](https://github.com/NousResearch/hermes-agent/pull/9895))
 - **Telegram callback authorization** on update prompts ([#10536](https://github.com/NousResearch/hermes-agent/pull/10536))
 - **SECURITY.md** added ([#10532](https://github.com/NousResearch/hermes-agent/pull/10532), @I3eg1nner)
-- **Warn about legacy hermes.service units** during `hermes update` ([#11918](https://github.com/NousResearch/hermes-agent/pull/11918))
+- **Warn about legacy argo.service units** during `argo update` ([#11918](https://github.com/NousResearch/hermes-agent/pull/11918))
 - **Complete ASCII-locale UnicodeEncodeError recovery** for `api_messages`/`reasoning_content` (closes #6843) ([#10537](https://github.com/NousResearch/hermes-agent/pull/10537))
 - **Prevent stale `os.environ` leak** after `clear_session_vars` ([#10527](https://github.com/NousResearch/hermes-agent/pull/10527))
 - **Prevent agent hang when backgrounding processes** via terminal tool ([#10584](https://github.com/NousResearch/hermes-agent/pull/10584))
@@ -362,7 +362,7 @@ The `fix:` category in this window covers 482 PRs. Highlights:
 - Gateway display.streaming root-config override regression ([#9799](https://github.com/NousResearch/hermes-agent/pull/9799))
 - Context `session_search` coerces limit to int (prevents TypeError) ([#10522](https://github.com/NousResearch/hermes-agent/pull/10522))
 - Memory tool stays available when `fcntl` is unavailable (Windows) ([#9783](https://github.com/NousResearch/hermes-agent/pull/9783))
-- Trajectory compressor credentials load from `HERMES_HOME/.env` ([#9632](https://github.com/NousResearch/hermes-agent/pull/9632), @Dusk1e)
+- Trajectory compressor credentials load from `ARGO_HOME/.env` ([#9632](https://github.com/NousResearch/hermes-agent/pull/9632), @Dusk1e)
 - `@_context_completions` no longer crashes on `@` mention ([#9683](https://github.com/NousResearch/hermes-agent/pull/9683), @kshitijk4poor)
 - Group session `user_id` no longer treated as `thread_id` in shutdown notifications ([#10546](https://github.com/NousResearch/hermes-agent/pull/10546))
 - Telegram `platform_hint` — markdown is supported (closes #8261) ([#10612](https://github.com/NousResearch/hermes-agent/pull/10612))

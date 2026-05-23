@@ -29,8 +29,8 @@ Usage:
     ``-k 'pattern'``, ``--lf``).
 
 Environment:
-    HERMES_TEST_WORKERS  Override worker count (default: os.cpu_count())
-    HERMES_TEST_PATHS    Override discovery roots (colon-sep, default: 'tests')
+    ARGO_TEST_WORKERS  Override worker count (default: os.cpu_count())
+    ARGO_TEST_PATHS    Override discovery roots (colon-sep, default: 'tests')
 
 Exit code: 0 if every file's pytest exited 0; 1 otherwise.
 """
@@ -60,7 +60,7 @@ _SKIP_PARTS = {"integration", "e2e"}
 # Per-file wall-clock cap. Generous default — pytest-timeout still
 # enforces per-test caps inside each subprocess; this is just an outer
 # safety net so a single hung file can't stall the whole suite. Override
-# via --file-timeout or HERMES_TEST_FILE_TIMEOUT.
+# via --file-timeout or ARGO_TEST_FILE_TIMEOUT.
 _DEFAULT_FILE_TIMEOUT_SECONDS = 600.0  # 10 minutes
 
 # Duration cache: maps relative file paths to last-observed subprocess
@@ -357,7 +357,7 @@ def _parse_pytest_summary(output: str) -> dict[str, int]:
 def _format_file(file: Path, repo_root: Path) -> str:
     """Render a test-file path for display: strip the repo-root prefix
     when possible so output reads ``tests/acp/test_auth.py`` instead of
-    ``/home/runner/work/hermes-agent/hermes-agent/tests/acp/test_auth.py``.
+    ``/home/runner/work/argo-agent/argo-agent/tests/acp/test_auth.py``.
 
     Falls back to the absolute path for anything outside the repo root.
     """
@@ -581,12 +581,12 @@ def main() -> int:
         "-j",
         "--jobs",
         type=int,
-        default=int(os.environ.get("HERMES_TEST_WORKERS") or (os.cpu_count() or 4) * 2),
-        help="Parallel worker count (default: $HERMES_TEST_WORKERS or cpu_count*2)",
+        default=int(os.environ.get("ARGO_TEST_WORKERS") or (os.cpu_count() or 4) * 2),
+        help="Parallel worker count (default: $ARGO_TEST_WORKERS or cpu_count*2)",
     )
     parser.add_argument(
         "--paths",
-        default=os.environ.get("HERMES_TEST_PATHS", ":".join(_DEFAULT_ROOTS)),
+        default=os.environ.get("ARGO_TEST_PATHS", ":".join(_DEFAULT_ROOTS)),
         help="Colon-separated discovery roots (default: 'tests')",
     )
     parser.add_argument(
@@ -598,12 +598,12 @@ def main() -> int:
         "--file-timeout",
         type=float,
         default=float(
-            os.environ.get("HERMES_TEST_FILE_TIMEOUT", _DEFAULT_FILE_TIMEOUT_SECONDS)
+            os.environ.get("ARGO_TEST_FILE_TIMEOUT", _DEFAULT_FILE_TIMEOUT_SECONDS)
         ),
         help=(
             "Per-file wall-clock cap in seconds. On timeout, the pytest "
             "subprocess and its full process tree are SIGKILL'd. "
-            "Default: 600 (10 min), env: HERMES_TEST_FILE_TIMEOUT."
+            "Default: 600 (10 min), env: ARGO_TEST_FILE_TIMEOUT."
         ),
     )
     parser.add_argument(
@@ -614,7 +614,7 @@ def main() -> int:
             "Files are distributed across slices using cached durations "
             "so each slice takes roughly equal wall time. "
             "Without a duration cache, files are distributed by count. "
-            "Env: HERMES_TEST_SLICE (format: I/N)."
+            "Env: ARGO_TEST_SLICE (format: I/N)."
         ),
     )
     parser.add_argument(
@@ -639,9 +639,9 @@ def main() -> int:
         our_args, pytest_passthrough = argv, []
     args = parser.parse_args(our_args)
 
-    # Parse --slice (or HERMES_TEST_SLICE) early so we can exit on bad input
+    # Parse --slice (or ARGO_TEST_SLICE) early so we can exit on bad input
     # before doing any expensive discovery.
-    slice_raw = args.slice or os.environ.get("HERMES_TEST_SLICE")
+    slice_raw = args.slice or os.environ.get("ARGO_TEST_SLICE")
     slice_index: int | None = None
     slice_count: int = 1
     if slice_raw:
