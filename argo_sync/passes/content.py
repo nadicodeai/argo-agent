@@ -35,14 +35,7 @@ import re
 from pathlib import Path
 
 from argo_sync.config import RenameConfig
-
-# ---------------------------------------------------------------------------
-# Directories that are always skipped during traversal.
-# ---------------------------------------------------------------------------
-
-_SKIP_DIRS: frozenset[str] = frozenset(
-    {".git", ".venv", ".argo", "__pycache__", "node_modules"}
-)
+from argo_sync.passes._constants import SKIP_DIRS as _SKIP_DIRS
 
 # Number of bytes to inspect for binary detection.
 _BINARY_PROBE_BYTES: int = 8192
