@@ -13316,11 +13316,20 @@ Examples:
 
     update_parser = subparsers.add_parser(
         "update",
-        help="Fetch upstream-mirror, merge into main, run rename engine, commit",
+        help="Sync with upstream: fetch → merge → rename → commit",
         description=(
             "Sync argo-agent with upstream: fetch upstream → merge upstream-mirror "
-            "→ run rename engine → commit. Replaces the former PyPI self-updater."
+            "→ run rename engine → commit.\n\n"
+            "Steps performed by a full run:\n"
+            "  1. git fetch upstream  (pulls new upstream commits)\n"
+            "  2. merge upstream-mirror into main  (argo-renamed branch)\n"
+            "  3. run RenameEngine from argo-rename.yaml  (content + filenames + dirs)\n"
+            "  4. commit the renamed tree with the upstream SHA in the message\n\n"
+            "On merge conflict: resolve manually, then run 'argo update --resume'.\n"
+            "Do NOT run 'git merge --continue' — the rename engine must run after\n"
+            "conflict resolution but before the commit."
         ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     update_parser.add_argument(
         "--upstream-branch",
