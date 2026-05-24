@@ -16,3 +16,71 @@ paths = ['''tests/tools/test_credential_pool_env_fallback\.py''']
 description = "Placeholder secret in Open WebUI documentation curl example"
 regexes = ['''your-secret-key''']
 paths = ['''website/docs/user-guide/messaging/open-webui\.md''']
+
+# ---------------------------------------------------------------------------
+# Path-scoped allowlists — directories whose entire purpose is fake/example
+# values, public identifiers, or content the redaction module is built to
+# detect. Real user-supplied secrets do not belong in any of these paths.
+# ---------------------------------------------------------------------------
+
+[[allowlists]]
+description = "Test fixtures — fake keys exist to exercise detection and redaction code paths"
+paths = [
+  '''tests/.*''',
+]
+
+[[allowlists]]
+description = "Website docs — configuration examples, curl placeholders, env-var lists"
+paths = [
+  '''website/docs/.*''',
+]
+
+[[allowlists]]
+description = "Bundled and optional skills — instruction docs include API-shape examples"
+paths = [
+  '''skills/.*''',
+  '''optional-skills/.*''',
+]
+
+[[allowlists]]
+description = "Redaction module — by design contains example secret patterns it detects"
+paths = [
+  '''agent/redact\.py''',
+]
+
+[[allowlists]]
+description = "OAuth public client IDs (Anthropic, Google, Codex, Minimax, XAI, Qwen, Copilot) — public by RFC 6749; ship in every distribution of the binary"
+paths = [
+  '''(?:argo|hermes)_cli/auth\.py''',
+  '''(?:argo|hermes)_cli/copilot_auth\.py''',
+  '''agent/anthropic_adapter\.py''',
+  '''agent/google_oauth\.py''',
+]
+
+[[allowlists]]
+description = "Historical paths — files present in git history (pre-rename or removed) that no longer exist in HEAD"
+paths = [
+  '''hermes_cli/.*''',
+  '''tests/hermes_cli/.*''',
+  '''evals/.*''',
+  '''exprted\.jsonl''',
+  '''mixture_of_agents_tool\.py''',
+]
+
+[[allowlists]]
+description = "Public ElevenLabs / VAPI voice identifiers — voice IDs are public model handles, not credentials"
+regexes = [
+  '''VAPI_DEFAULT_VOICE_ID''',
+]
+
+[[allowlists]]
+description = "Discord snowflake IDs in docs (DISCORD_ALLOWED_USERS, DISCORD_HOME_CHANNEL) — user/channel identifiers are public by Discord's data model"
+regexes = [
+  '''DISCORD_ALLOWED_USERS''',
+  '''DISCORD_HOME_CHANNEL''',
+]
+paths = [
+  '''README\.md''',
+  '''AGENTS\.md''',
+  '''docs/.*''',
+]
