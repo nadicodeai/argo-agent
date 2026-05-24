@@ -1,14 +1,47 @@
 #!/usr/bin/env python3
 """argo-sync — rename + upstream-sync engine entry point.
 
-M1 scaffolding: argument parser only. Implementation lands in M2 (engine) and M4
-(orchestration with git operations). See .shepherd/plan.md for the full plan.
+This script is the low-level entry point for the argo-agent sync workflow.
+Operators should normally invoke it via ``argo update``, which wraps this
+script with additional precondition checks, progress reporting, and state
+tracking.
 
-Synopsis (target shape, not yet wired):
+Workflow
+--------
+A full sync run performs four ordered steps:
 
+1. **Fetch** — ``git fetch upstream`` pulls the latest upstream commits
+   into the ``upstream`` remote without touching any local branch.
+2. **Merge** — ``git merge upstream/main`` fast-forwards
+   ``upstream-mirror`` to the latest upstream tip, then merges
+   ``upstream-mirror`` into ``main`` (the argo-renamed branch).
+3. **Rename** — :class:`argo_sync.engine.RenameEngine` applies all
+   mappings from ``argo-rename.yaml`` in a deterministic, idempotent
+   three-pass order (content → filenames → directories), writing a
+   manifest to ``.argo/sync-manifest.json``.
+4. **Commit** — the renamed tree is staged and committed with a message
+   referencing the upstream SHA, e.g.
+   ``sync: apply argo rename from upstream@<short-sha>``.
+
+Conflict Resolution
+-------------------
+If step 2 produces a merge conflict:
+
+- ``argo update`` (or this script) exits non-zero and prints the
+  conflicting paths.
+- Resolve conflicts manually with your preferred editor/merge tool.
+- Run ``git add <resolved-files>`` to stage the resolved files.
+- Run ``argo update --resume`` (or ``argo-sync --resume``) to complete
+  the rename pass and commit.
+
+Do **not** run ``git merge --continue`` — the rename engine must run
+after the conflict is resolved but before the commit.
+
+Synopsis
+--------
     argo-sync                 # full sync: fetch upstream + merge + rename + commit
-    argo-sync --rename-only   # rename pass only, no git
-    argo-sync --merge-only    # merge upstream into main, no rename
+    argo-sync --rename-only   # rename pass only, no git fetch/merge
+    argo-sync --merge-only    # merge upstream into main, skip rename engine
     argo-sync --resume        # resume after manual conflict resolution
 """
 

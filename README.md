@@ -73,7 +73,7 @@ argo config set   # Set individual config values
 argo gateway      # Start the messaging gateway (Telegram, Discord, etc.)
 argo setup        # Run the full setup wizard (configures everything at once)
 argo claw migrate # Migrate from OpenClaw (if coming from OpenClaw)
-argo update       # Update to the latest version
+argo update       # Sync with upstream (fetch → merge → rename → commit)
 argo doctor       # Diagnose any issues
 ```
 
