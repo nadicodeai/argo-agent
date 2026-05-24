@@ -6,7 +6,7 @@ Usage (via cron with --no-agent):
     argo cron create argo-issues \\
       --schedule "*/5 * * * *" --no-agent \\
       --script "$ARGO_HOME/skills/devops/watchers/scripts/watch_github.py" \\
-      --script-args "--name argo-issues --repo NousResearch/argo-agent --scope issues"
+      --script-args "--name argo-issues --repo nadicodeai/argo-agent --scope issues"
 
 Set GITHUB_TOKEN (or GH_TOKEN) in ~/.argo/.env to avoid the 60 req/hr
 anonymous rate limit.

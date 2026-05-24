@@ -144,7 +144,7 @@ DEFAULT_AGENT_IDENTITY = (
 ARGO_AGENT_HELP_GUIDANCE = (
     "If the user asks about configuring, setting up, or using Argo Agent "
     "itself, load the `argo-agent` skill with skill_view(name='argo-agent') "
-    "before answering. Docs: https://argo-agent.nousresearch.com/docs"
+    "before answering. Docs: https://hermes-agent.nousresearch.com/docs"
 )
 
 MEMORY_GUIDANCE = (

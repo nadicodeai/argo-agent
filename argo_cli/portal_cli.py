@@ -20,7 +20,7 @@ from argo_cli.config import load_config
 
 DEFAULT_PORTAL_URL = "https://portal.nousresearch.com"
 SUBSCRIPTION_URL = "https://portal.nousresearch.com/manage-subscription"
-DOCS_URL = "https://argo-agent.nousresearch.com/docs/user-guide/features/tool-gateway"
+DOCS_URL = "https://hermes-agent.nousresearch.com/docs/user-guide/features/tool-gateway"
 
 
 def _nous_portal_base_url() -> str:

@@ -8,7 +8,7 @@ with HTTP 404. The dedicated check at argo_cli/doctor.py already covers
 Anthropic with the right headers, so the pluggable profile must be
 skipped by `_build_apikey_providers_list()`.
 
-See: NousResearch/argo-agent#22346
+See: nadicodeai/argo-agent#22346
 """
 
 from __future__ import annotations

@@ -79,7 +79,7 @@ def _discord_request(
         headers={
             "Authorization": f"Bot {token}",
             "Content-Type": "application/json",
-            "User-Agent": "Argo-Agent (https://github.com/NousResearch/argo-agent)",
+            "User-Agent": "Argo-Agent (https://github.com/nadicodeai/argo-agent)",
         },
     )
 

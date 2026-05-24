@@ -149,11 +149,11 @@ argo webhook subscribe pr-review \
   --deliver github_comment
 ```
 
-Full automation templates gallery: [argo-agent.nousresearch.com/docs/guides/automation-templates](https://argo-agent.nousresearch.com/docs/guides/automation-templates)
+Full automation templates gallery: [hermes-agent.nousresearch.com/docs/guides/automation-templates](https://hermes-agent.nousresearch.com/docs/guides/automation-templates)
 
-Documentation: [argo-agent.nousresearch.com](https://argo-agent.nousresearch.com)
+Documentation: [hermes-agent.nousresearch.com](https://hermes-agent.nousresearch.com)
 
-GitHub: [github.com/NousResearch/argo-agent](https://github.com/NousResearch/argo-agent)
+GitHub: [github.com/nadicodeai/argo-agent](https://github.com/nadicodeai/argo-agent)
 
 ---
 

@@ -66,7 +66,7 @@ Watch a GitHub repo (set `GITHUB_TOKEN` in `~/.argo/.env` to avoid the 60 req/hr
 
 ```bash
 python $ARGO_HOME/skills/devops/watchers/scripts/watch_github.py \
-  --name argo-issues --repo NousResearch/argo-agent --scope issues
+  --name argo-issues --repo nadicodeai/argo-agent --scope issues
 ```
 
 Poll an arbitrary JSON API:

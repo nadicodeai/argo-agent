@@ -35,11 +35,11 @@ No clone needed. Nix fetches, builds, and runs everything:
 
 ```bash
 # Run directly (builds on first use, cached after)
-nix run github:NousResearch/argo-agent -- setup
-nix run github:NousResearch/argo-agent -- chat
+nix run github:nadicodeai/argo-agent -- setup
+nix run github:nadicodeai/argo-agent -- chat
 
 # Or install persistently
-nix profile install github:NousResearch/argo-agent
+nix profile install github:nadicodeai/argo-agent
 argo setup
 argo chat
 ```
@@ -50,7 +50,7 @@ After `nix profile install`, `argo`, `argo-agent`, and `argo-acp` are on your PA
 <summary><strong>Building from a local clone</strong></summary>
 
 ```bash
-git clone https://github.com/NousResearch/argo-agent.git
+git clone https://github.com/nadicodeai/argo-agent.git
 cd argo-agent
 nix build
 ./result/bin/argo setup
@@ -75,7 +75,7 @@ This module requires NixOS. For non-NixOS systems (macOS, other Linux distros), 
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    argo-agent.url = "github:NousResearch/argo-agent";
+    argo-agent.url = "github:nadicodeai/argo-agent";
   };
 
   outputs = { nixpkgs, argo-agent, ... }: {
@@ -685,7 +685,7 @@ External flakes can override the package directly:
 
 ```nix
 {
-  inputs.argo-agent.url = "github:NousResearch/argo-agent";
+  inputs.argo-agent.url = "github:nadicodeai/argo-agent";
   outputs = { argo-agent, nixpkgs, ... }: {
     nixpkgs.overlays = [ argo-agent.overlays.default ];
     # Then:

@@ -81,7 +81,7 @@ This isn't a quality bar — it's a coupling-and-maintenance decision. Memory pr
 ### Clone and install
 
 ```bash
-git clone --recurse-submodules https://github.com/NousResearch/argo-agent.git
+git clone --recurse-submodules https://github.com/nadicodeai/argo-agent.git
 cd argo-agent
 
 # Create venv with Python 3.11
@@ -194,7 +194,7 @@ argo-agent/
 ├── skills/                   # Bundled skills (copied to ~/.argo/skills/ on install)
 ├── optional-skills/          # Official optional skills (discoverable via hub, not activated by default)
 ├── tests/                    # Test suite
-├── website/                  # Documentation site (argo-agent.nousresearch.com)
+├── website/                  # Documentation site (hermes-agent.nousresearch.com)
 │
 ├── cli-config.yaml.example   # Example configuration (copied to ~/.argo/config.yaml)
 └── AGENTS.md                 # Development guide for AI coding assistants
@@ -901,7 +901,7 @@ test(tools): add unit tests for file_operations
 
 ## Reporting Issues
 
-- Use [GitHub Issues](https://github.com/NousResearch/argo-agent/issues)
+- Use [GitHub Issues](https://github.com/nadicodeai/argo-agent/issues)
 - Include: OS, Python version, Argo version (`argo version`), full error traceback
 - Include steps to reproduce
 - Check existing issues before creating duplicates

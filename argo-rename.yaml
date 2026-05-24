@@ -5,6 +5,10 @@
 # The engine also re-sorts on load, so the order here is for human review.
 
 mappings:
+  # --- URL-form mapping (longest first; must precede bare hermes-agent) ---
+  # GitHub URLs for the upstream Hermes repo map to this fork's GitHub repo.
+  # nadicode does not own nousresearch.com, so no docs/pypi domains are rewritten.
+  - {from: "NousResearch/hermes-agent", to: "nadicodeai/argo-agent"}
   # --- Composite identifiers (longest first) ---
   - {from: "hermes_tools_mcp_server", to: "argo_tools_mcp_server"}
   - {from: "HermesAgent",             to: "ArgoAgent"}
@@ -37,10 +41,14 @@ exceptions:
     why: "This test validates the rename config by checking that hermes-* FROM keys are present in mappings. It must contain hermes-* string literals and cannot be renamed by the engine itself."
 
 skip_contexts:
-  # Protect URLs that do NOT point to our own project repos/domains.
-  # This lets us rename hermes-agent → argo-agent inside OUR project URLs
-  # (github.com/NousResearch/hermes-agent, hermes-agent.nousresearch.com,
-  # pypi.org/p/hermes-agent) while leaving third-party URLs intact.
-  - 'https?://(?!(?:(?:raw\.)?github(?:usercontent)?\.com/NousResearch/hermes(?:-agent|-example-plugins)|hermes-agent\.nousresearch\.com|hermes-agent\.local|pypi\.org/p/hermes-agent|img\.shields\.io/badge/Docs-hermes))[^\s]*'
+  # Preserve every URL whose host/path is NOT something nadicode controls.
+  # We only rewrite GitHub URLs for the upstream hermes-agent repo (handled by
+  # the NousResearch/hermes-agent → nadicodeai/argo-agent mapping above) and
+  # the hermes-agent.local devhost. Everything else — hermes-agent.nousresearch.com
+  # (real upstream docs site, owned by NousResearch), pypi.org/p/hermes-agent
+  # (real upstream PyPI package), img.shields.io/badge/Docs-hermes (badge label
+  # that should mirror upstream), and NousResearch/hermes-example-plugins
+  # (no nadicode fork exists) — is preserved as-is.
+  - 'https?://(?!(?:(?:raw\.)?github(?:usercontent)?\.com/NousResearch/hermes-agent\b|hermes-agent\.local))[^\s]*'
   - '\b[0-9a-f]{40}\b'      # Don't rewrite inside git-sha-like 40-hex tokens.
   - '\b[0-9a-f]{64}\b'      # Don't rewrite inside sha256-like 64-hex tokens.

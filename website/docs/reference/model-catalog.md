@@ -13,7 +13,7 @@ When the manifest is unreachable (offline, network blocked, hosting failure), Ar
 ## Live manifest URL
 
 ```
-https://argo-agent.nousresearch.com/docs/api/model-catalog.json
+https://hermes-agent.nousresearch.com/docs/api/model-catalog.json
 ```
 
 Published on every merge to `main` via the existing `deploy-site.yml` GitHub Pages pipeline. The source of truth lives in the repo at `website/static/api/model-catalog.json`.
@@ -68,7 +68,7 @@ Cache location: `~/.argo/cache/model_catalog.json`.
 ```yaml
 model_catalog:
   enabled: true
-  url: https://argo-agent.nousresearch.com/docs/api/model-catalog.json
+  url: https://hermes-agent.nousresearch.com/docs/api/model-catalog.json
   ttl_hours: 24
   providers: {}
 ```
