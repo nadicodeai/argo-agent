@@ -56,6 +56,14 @@
 ### M5 — Real-Deployment Smoke (KEY GATE) — pending
 ### M6 — Documentation and Handoff — pending
 
+## T5.4 Status (push to GitHub origin) — DEFERRED to user
+
+- `origin` remote configured with placeholder URL: `file:///tmp/argo-origin.git` (per plan's autonomous-decision rule).
+- First attempted push (`git push -u origin main upstream-mirror`) was BLOCKED by a global gitleaks pre-push hook reporting "730 leaks found" across the renamed upstream content (35 commits scanned, 61MB).
+- These are almost certainly false positives inherited from upstream hermes-agent content (test fixtures, example keys, regex patterns that match secret formats). Argo-agent did not introduce them.
+- ACTION REQUIRED FROM USER: when ready, (1) supply real private GitHub repo URL via `git remote set-url origin <url>`, (2) audit the gitleaks findings (likely allowlist the inherited test fixtures, real secrets if any need rotation), (3) push.
+- This does NOT block any downstream work — AC-2 verified, CI workflow committed, M6 docs can proceed.
+
 ## Decisions Log
 
 | Date | Decision | Rationale |
