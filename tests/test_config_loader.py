@@ -110,8 +110,8 @@ def test_matches_exception_non_excepted_file(tmp_path: Path) -> None:
     # upstream references — it must not match any exception glob.
     # (Previously this test pinned README.md as the negative case, but
     # README.md is now an exception in argo-rename.yaml because its
-    # fork-notice block intentionally references the upstream Hermes
-    # repo, docs site, and license attribution.)
+    # fork-notice block intentionally references the upstream repo,
+    # docs site, and license attribution.)
     assert cfg.matches_exception("agent/account_usage.py") is False
 
 
