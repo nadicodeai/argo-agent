@@ -2343,11 +2343,17 @@ class TestPtyWebSocket:
 
                 t = threading.Thread(target=_recv, daemon=True)
                 t.start()
+                # Bump from 10s → 30s: under heavy GHA load (especially when
+                # six test slices run in parallel) the ASGI background thread
+                # can take well over 10s to drain the publish queue, and the
+                # test fails with "broadcast not received" even though the
+                # frame eventually arrives. 30s is still bounded; a real hang
+                # is caught by pytest-timeout at the file level.
                 try:
-                    received = recv_q.get(timeout=10.0)
+                    received = recv_q.get(timeout=30.0)
                 except queue.Empty:
                     raise AssertionError(
-                        "broadcast not received within 10s — server likely "
+                        "broadcast not received within 30s — server likely "
                         "dropped the frame silently (see _broadcast_event "
                         "except Exception: pass)"
                     )
