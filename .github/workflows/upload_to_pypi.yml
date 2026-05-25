@@ -1,11 +1,18 @@
 name: Publish to PyPI
 
-# Triggered by CalVer tag pushes from scripts/release.py (e.g. v2026.5.15)
-# Can also be triggered manually from the Actions tab as an escape hatch.
+# Nadicode fork: this workflow is intentionally INERT.
+#
+# Nadicode does not publish argo-agent to PyPI (the "argo-agent" name is
+# not owned by Nadicode, and the fork distributes via setup-argo.sh /
+# scripts/install.sh / git clone). The workflow file is preserved so that
+# future `argo update` syncs from upstream merge cleanly, but the
+# original tag-push trigger is removed and every job is gated `if: false`.
+#
+# Re-enable by:
+#   1. Restoring the `push: tags: ['v20*']` trigger below.
+#   2. Removing the `if: false` from each job.
+#   3. Configuring the PYPI_API_TOKEN secret for a Nadicode-owned PyPI name.
 on:
-  push:
-    tags:
-      - 'v20*'  # CalVer tags: v2026.5.15, v2026.5.15.2, etc.
   workflow_dispatch:
     inputs:
       confirm_tag:
