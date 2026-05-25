@@ -4,7 +4,7 @@ let
   src = ../web;
   npmDeps = pkgs.fetchNpmDeps {
     inherit src;
-    hash = "sha256-6qhGuifHVtCeep1SiQdCUxBMr7UGhYpdMTvXhrQu/zA=";
+    hash = "sha256-UmuY/9+zs9XYBXmVL8o/70HpNhw40fP2ny/FitHseYs=";
   };
 
   npm = argoNpmLib.mkNpmPassthru { folder = "web"; attr = "web"; pname = "argo-web"; };

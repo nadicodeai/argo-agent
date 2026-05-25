@@ -27,8 +27,9 @@ import pytest
 
 
 pytestmark = pytest.mark.skipif(
-    not shutil.which("google-chrome") and not shutil.which("chromium"),
-    reason="Chrome/Chromium not installed",
+    not os.environ.get("ARGO_E2E_BROWSER")
+    or (not shutil.which("google-chrome") and not shutil.which("chromium")),
+    reason="Real-browser integration suite — set ARGO_E2E_BROWSER=1 and install Chrome/Chromium to run",
 )
 
 
