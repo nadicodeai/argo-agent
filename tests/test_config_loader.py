@@ -104,9 +104,15 @@ def test_matches_exception_shepherd(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_matches_exception_readme_false(tmp_path: Path) -> None:
+def test_matches_exception_non_excepted_file(tmp_path: Path) -> None:
     cfg = RenameConfig.load(SEED_CONFIG)
-    assert cfg.matches_exception("README.md") is False
+    # agent/account_usage.py is a regular source file with no intentional
+    # upstream references — it must not match any exception glob.
+    # (Previously this test pinned README.md as the negative case, but
+    # README.md is now an exception in argo-rename.yaml because its
+    # fork-notice block intentionally references the upstream Hermes
+    # repo, docs site, and license attribution.)
+    assert cfg.matches_exception("agent/account_usage.py") is False
 
 
 # ---------------------------------------------------------------------------
