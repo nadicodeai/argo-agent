@@ -22,14 +22,23 @@ concurrency:
 
 jobs:
   deploy-vercel:
-    if: github.event_name == 'release'
+    # Nadicode fork: gated off. VERCEL_DEPLOY_HOOK secret is not configured
+    # for this repo; the upstream pipeline expects a Nous-controlled Vercel
+    # project. Re-enable by adding a VERCEL_DEPLOY_HOOK secret for a Nadicode
+    # Vercel project and removing the `&& false`.
+    if: false && github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Vercel Deploy
         run: curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK }}"
 
   deploy-docs:
-    if: github.repository == 'nadicodeai/argo-agent'
+    # Nadicode fork: gated off. GitHub Pages is not configured for
+    # nadicodeai/argo-agent, and the build references hermes-agent.nousresearch.com
+    # (a domain Nadicode does not own) via the llms.txt comments. Re-enable
+    # by configuring GitHub Pages, updating the staging step, and replacing
+    # the upstream domain references with a Nadicode-controlled one.
+    if: false && github.repository == 'nadicodeai/argo-agent'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

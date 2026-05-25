@@ -50,8 +50,13 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
-    # Only deploy on schedule or manual trigger (not on every push to the script)
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    # Only deploy on schedule or manual trigger (not on every push to the script).
+    # Nadicode fork: gated off. This job deploys to GitHub Pages with a CNAME
+    # for hermes-agent.nousresearch.com (owned by NousResearch) and copies a
+    # `landingpage/` directory that does not exist in this fork. Re-enable by
+    # configuring GitHub Pages for this repo, restoring a landing page, and
+    # changing the CNAME to a domain Nadicode controls.
+    if: false && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
