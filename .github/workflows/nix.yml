@@ -15,6 +15,11 @@ concurrency:
 
 jobs:
   nix:
+    # Nadicode fork: gated off. The Nix flake is upstream's NixOS distribution
+    # path; Nadicode does not ship via NixOS, so the per-sync npm-deps hash
+    # maintenance burden buys us nothing. Re-enable by removing `false &&`
+    # if/when Nadicode publishes to a Nix channel or supports NixOS users.
+    if: false
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]

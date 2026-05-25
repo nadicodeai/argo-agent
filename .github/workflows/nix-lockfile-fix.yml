@@ -42,7 +42,9 @@ jobs:
   #   4. Uses a GitHub App token (not GITHUB_TOKEN) so the fix commit
   #      triggers downstream nix.yml verification.
   auto-fix-main:
-    if: github.event_name == 'push'
+    # Nadicode fork: gated off (companion to nix.yml). Nadicode does not
+    # ship via Nix, so auto-fixing npm-deps hashes isn't needed.
+    if: false && github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     concurrency:
@@ -125,12 +127,14 @@ jobs:
   # Existing behavior: run on manual dispatch OR when a task-list
   # checkbox in the sticky lockfile-check comment flips from [ ] to [x].
   fix:
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'issue_comment'
-       && github.event.issue.pull_request != null
-       && contains(github.event.comment.body, '[x] **Apply lockfile fix**')
-       && !contains(github.event.changes.body.from, '[x] **Apply lockfile fix**'))
+    # Nadicode fork: gated off (companion to nix.yml). Re-enable by replacing
+    # `if: false` with the original condition:
+    #   github.event_name == 'workflow_dispatch' ||
+    #   (github.event_name == 'issue_comment'
+    #    && github.event.issue.pull_request != null
+    #    && contains(github.event.comment.body, '[x] **Apply lockfile fix**')
+    #    && !contains(github.event.changes.body.from, '[x] **Apply lockfile fix**'))
+    if: false
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:

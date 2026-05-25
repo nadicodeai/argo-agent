@@ -24,6 +24,12 @@ concurrency:
 
 jobs:
   build:
+    # Nadicode fork: gated off. Nadicode does not publish argo-agent to
+    # PyPI — the "argo-agent" name is not owned by Nadicode, and the fork's
+    # distribution path is `setup-argo.sh` / `scripts/install.sh` /
+    # `git clone`, not pip install. Re-enable when Nadicode owns a PyPI
+    # package name and wants tag-triggered publishes.
+    if: false
     name: Build distribution 📦
     runs-on: ubuntu-latest
     steps:
@@ -87,6 +93,7 @@ jobs:
           path: dist/
 
   publish:
+    if: false  # Nadicode fork: see comment on `build` job
     name: Publish to PyPI
     needs: build
     runs-on: ubuntu-latest
@@ -109,6 +116,7 @@ jobs:
           skip-existing: true
 
   sign:
+    if: false  # Nadicode fork: see comment on `build` job
     name: Sign and attach to GitHub Release
     # Only runs on tag pushes — release.py creates the GitHub Release,
     # and workflow_dispatch won't have a matching release to attach to.
